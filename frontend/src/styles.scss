@@ -1,0 +1,148 @@
+/* GeoCommerce Pro - Styles globaux */
+
+// Variables de couleur
+:root {
+  --primary: #1a73e8;
+  --primary-dark: #1557b0;
+  --secondary: #5f6368;
+  --success: #34a853;
+  --warning: #fbbc04;
+  --danger: #ea4335;
+  --info: #4285f4;
+  --light: #f8f9fa;
+  --dark: #202124;
+  --white: #ffffff;
+  --gray-100: #f8f9fa;
+  --gray-200: #e8eaed;
+  --gray-300: #dadce0;
+  --gray-400: #bdc1c6;
+  --gray-500: #9aa0a6;
+  --gray-600: #80868b;
+  --gray-700: #5f6368;
+  --gray-800: #3c4043;
+  --gray-900: #202124;
+
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 72px;
+  --header-height: 64px;
+  --border-radius: 12px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--gray-900);
+  background-color: var(--gray-100);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Scrollbar personnalisée
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-200);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}
+
+// Leaflet custom styles
+.leaflet-container {
+  font-family: 'Inter', sans-serif;
+}
+
+.custom-marker {
+  background: var(--primary);
+  border: 3px solid var(--white);
+  border-radius: 50%;
+  width: 36px !important;
+  height: 36px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  box-shadow: var(--shadow-md);
+}
+
+// Animations
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+// Classes utilitaires
+.text-primary { color: var(--primary) !important; }
+.text-success { color: var(--success) !important; }
+.text-warning { color: var(--warning) !important; }
+.text-danger { color: var(--danger) !important; }
+.bg-primary { background-color: var(--primary) !important; }
+.bg-success { background-color: var(--success) !important; }
+.bg-warning { background-color: var(--warning) !important; }
+.bg-danger { background-color: var(--danger) !important; }
+
+// Responsive
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 0px;
+  }
+
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+// Material overrides
+.mat-mdc-snack-bar-container {
+  &.success-snackbar {
+    --mdc-snackbar-container-color: var(--success);
+  }
+  &.error-snackbar {
+    --mdc-snackbar-container-color: var(--danger);
+  }
+  &.warning-snackbar {
+    --mdc-snackbar-container-color: var(--warning);
+    --mdc-snackbar-supporting-text-color: var(--dark);
+  }
+}

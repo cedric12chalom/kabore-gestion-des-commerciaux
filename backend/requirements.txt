@@ -1,0 +1,37 @@
+# GeoCommerce Pro - Backend Dependencies
+# Django & DRF
+django>=4.2,<5.0
+djangorestframework>=3.14.0
+django-cors-headers>=4.3.0
+djangorestframework-simplejwt>=5.3.0
+drf-spectacular>=0.27.0
+
+# Database & GIS
+psycopg2-binary>=2.9.9
+# PostGIS est installé via PostgreSQL, pas pip
+
+# Real-time (WebSocket)
+channels>=4.0.0
+channels-redis>=4.1.0
+daphne>=4.0.0
+
+# Utilities
+Pillow>=10.1.0          # Images (photos profil)
+python-dotenv>=1.0.0    # Variables d'environnement
+gunicorn>=21.2.0        # Serveur WSGI production
+whitenoise>=6.6.0       # Fichiers statiques en production
+celery>=5.3.0           # Tâches asynchrones (notifications)
+redis>=5.0.0            # Broker Celery + cache
+
+# Sécurité
+django-ratelimit>=4.1.0 # Rate limiting
+bleach>=6.1.0           # Sanitization HTML
+
+# Tests
+pytest>=7.4.0
+pytest-django>=4.7.0
+factory-boy>=3.3.0
+
+# Export
+reportlab>=4.0.0        # PDF
+openpyxl>=3.1.0         # Excel

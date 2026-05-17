@@ -1,0 +1,314 @@
+[
+  {
+    "model": "users.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$7PmY4Nf53HHxrygDSd1MFu$nw3s3giFkwGG+32IjPlhCYeZeLND1kmGVwrgcKAoi0g=", 
+      "last_login": "2026-05-16T10:00:00Z",
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "Daniel",
+      "last_name": "KINKEU",
+      "email": "admin@geocommerce.pro",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "role": "ADMIN",
+      "phone": "+237 677 77 77 77",
+      "photo": "",
+      "manager": null
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$KundqL7GpibQPLcjbNElVc$jUcoKRocku2jU1gT5n+kKTydkANMlYnZev0K4WoVCHw=",
+      "last_login": "2026-05-16T10:00:00Z",
+      "is_superuser": false,
+      "username": "manager1",
+      "first_name": "Marie",
+      "last_name": "NGONO",
+      "email": "manager@geocommerce.pro",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-15T00:00:00Z",
+      "role": "MANAGER",
+      "phone": "+237 678 88 88 88",
+      "photo": "",
+      "manager": null
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$oXCabj5iwzd9kmInvaBU39$NOubNko5Byd+88pDfR4UsL4zW9ue05laa5Lmcd24yr0=",
+      "last_login": "2026-05-16T10:00:00Z",
+      "is_superuser": false,
+      "username": "commercial1",
+      "first_name": "Jean",
+      "last_name": "MBALLA",
+      "email": "commercial@geocommerce.pro",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-02-01T00:00:00Z",
+      "role": "COMMERCIAL",
+      "phone": "+237 690 11 11 11",
+      "photo": "",
+      "manager": 2
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 4,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$oXCabj5iwzd9kmInvaBU39$NOubNko5Byd+88pDfR4UsL4zW9ue05laa5Lmcd24yr0=",
+      "last_login": "2026-05-16T10:00:00Z",
+      "is_superuser": false,
+      "username": "commercial2",
+      "first_name": "Aline",
+      "last_name": "FOUDA",
+      "email": "commercial2@geocommerce.pro",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-02-15T00:00:00Z",
+      "role": "COMMERCIAL",
+      "phone": "+237 691 22 22 22",
+      "photo": "",
+      "manager": 2
+    }
+  },
+  {
+    "model": "commerciaux.zone",
+    "pk": 1,
+    "fields": {
+      "nom": "Douala Centre",
+      "description": "Zone commerciale centrale de Douala",
+      "polygone": "SRID=4326;POLYGON((9.7400 4.0400, 9.7800 4.0400, 9.7800 4.0700, 9.7400 4.0700, 9.7400 4.0400))",
+      "manager": 2,
+      "ville": "Douala",
+      "pays": "Cameroun",
+      "is_active": true,
+      "created_at": "2026-01-10T00:00:00Z",
+      "updated_at": "2026-01-10T00:00:00Z"
+    }
+  },
+  {
+    "model": "commerciaux.commercial",
+    "pk": 1,
+    "fields": {
+      "user": 3,
+      "matricule": "COM-2026-001",
+      "statut": "ACTIF",
+      "zone": 1,
+      "objectif_mensuel": "5000000.00",
+      "objectif_trimestriel": "15000000.00",
+      "date_embauche": "2026-02-01",
+      "derniere_visite": "2026-05-16T08:00:00Z",
+      "total_ventes": "12500000.00",
+      "vehicule": "Toyota Hilux",
+      "immatriculation": "CE 1234 AB",
+      "created_at": "2026-02-01T00:00:00Z",
+      "updated_at": "2026-05-16T00:00:00Z",
+      "created_by": 1
+    }
+  },
+  {
+    "model": "commerciaux.commercial",
+    "pk": 2,
+    "fields": {
+      "user": 4,
+      "matricule": "COM-2026-002",
+      "statut": "ACTIF",
+      "zone": 1,
+      "objectif_mensuel": "4000000.00",
+      "objectif_trimestriel": "12000000.00",
+      "date_embauche": "2026-02-15",
+      "derniere_visite": "2026-05-16T09:00:00Z",
+      "total_ventes": "8900000.00",
+      "vehicule": "Ford Ranger",
+      "immatriculation": "CE 5678 CD",
+      "created_at": "2026-02-15T00:00:00Z",
+      "updated_at": "2026-05-16T00:00:00Z",
+      "created_by": 1
+    }
+  },
+  {
+    "model": "commerciaux.telephone",
+    "pk": 1,
+    "fields": {
+      "commercial": 1,
+      "numero": "+237690111111",
+      "type": "MOBILE",
+      "is_principal": true,
+      "is_whatsapp": true,
+      "created_at": "2026-02-01T00:00:00Z",
+      "updated_at": "2026-02-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "commerciaux.produit",
+    "pk": 1,
+    "fields": {
+      "reference": "PRD-001",
+      "nom": "Smartphone Galaxy S24",
+      "description": "Smartphone Android haut de gamme",
+      "categorie": "ELECTRONIQUE",
+      "prix_unitaire": "450000.00",
+      "prix_gros": "400000.00",
+      "stock": 50,
+      "is_active": true,
+      "image": "",
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "commerciaux.produit",
+    "pk": 2,
+    "fields": {
+      "reference": "PRD-002",
+      "nom": "Ordinateur Portable HP ProBook",
+      "description": "Ordinateur portable professionnel",
+      "categorie": "ELECTRONIQUE",
+      "prix_unitaire": "350000.00",
+      "prix_gros": "320000.00",
+      "stock": 30,
+      "is_active": true,
+      "image": "",
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "clients.client",
+    "pk": 1,
+    "fields": {
+      "raison_sociale": "Supermarché Bonapriso",
+      "nom_contact": "M. Essomba",
+      "email": "contact@bonapriso.cm",
+      "telephone": "+237 233 40 00 00",
+      "adresse": "Rue Bonapriso, Douala",
+      "ville": "Douala",
+      "code_postal": "",
+      "pays": "Cameroun",
+      "position": "SRID=4326;POINT(9.7600 4.0500)",
+      "secteur": "RETAIL",
+      "potentiel": "A",
+      "commercial_referent": 1,
+      "is_actif": true,
+      "date_creation": "2026-03-01T00:00:00Z",
+      "date_modification": "2026-03-01T00:00:00Z",
+      "notes": "Client stratégique, commandes régulières"
+    }
+  },
+  {
+    "model": "clients.client",
+    "pk": 2,
+    "fields": {
+      "raison_sociale": "Pharmacie Centrale Akwa",
+      "nom_contact": "Mme. Nkodo",
+      "email": "pharmacie.akwa@gmail.com",
+      "telephone": "+237 233 42 00 00",
+      "adresse": "Boulevard de la Liberté, Akwa",
+      "ville": "Douala",
+      "code_postal": "",
+      "pays": "Cameroun",
+      "position": "SRID=4326;POINT(9.7700 4.0600)",
+      "secteur": "SANTE",
+      "potentiel": "B",
+      "commercial_referent": 2,
+      "is_actif": true,
+      "date_creation": "2026-03-15T00:00:00Z",
+      "date_modification": "2026-03-15T00:00:00Z",
+      "notes": "Intéressée par les produits électroniques de santé"
+    }
+  },
+  {
+    "model": "visites.visite",
+    "pk": 1,
+    "fields": {
+      "commercial": 1,
+      "client": 1,
+      "type_visite": "REGULIERE",
+      "date_prevue": "2026-05-16T10:00:00Z",
+      "date_effective": "2026-05-16T10:05:00Z",
+      "duree_estimee": 60,
+      "duree_reelle": 55,
+      "objectif": "Présentation nouvelle gamme smartphones",
+      "statut": "EFFECTUEE",
+      "checkin_lat": "4.0500",
+      "checkin_lng": "9.7600",
+      "checkin_position": "SRID=4326;POINT(9.7600 4.0500)",
+      "checkin_timestamp": "2026-05-16T10:05:00Z",
+      "checkout_lat": "4.0500",
+      "checkout_lng": "9.7600",
+      "checkout_position": "SRID=4326;POINT(9.7600 4.0500)",
+      "checkout_timestamp": "2026-05-16T11:00:00Z",
+      "compte_rendu": "Le client est intéressé par 20 unités. Négociation en cours sur le prix.",
+      "actions_suivantes": "Envoyer devis détaillé avant le 20 mai",
+      "satisfaction_client": 4,
+      "commande": null,
+      "created_at": "2026-05-10T00:00:00Z",
+      "updated_at": "2026-05-16T11:00:00Z"
+    }
+  },
+  {
+    "model": "commandes.commande",
+    "pk": 1,
+    "fields": {
+      "reference": "CMD-2026-001",
+      "commercial": 1,
+      "client": 1,
+      "date": "2026-05-16T11:30:00Z",
+      "date_validation": "2026-05-16T14:00:00Z",
+      "date_livraison_prevue": "2026-05-20",
+      "date_livraison_effective": null,
+      "montant_total": "9000000.00",
+      "montant_remise": "500000.00",
+      "montant_ht": "8500000.00",
+      "tva": "0.00",
+      "statut": "VALIDEE",
+      "adresse_livraison": "Rue Bonapriso, Douala",
+      "notes": "Livraison avant 10h",
+      "created_at": "2026-05-16T11:30:00Z",
+      "updated_at": "2026-05-16T14:00:00Z"
+    }
+  },
+  {
+    "model": "commandes.lignecommande",
+    "pk": 1,
+    "fields": {
+      "commande": 1,
+      "produit": 1,
+      "quantite": 20,
+      "prix_unitaire": "450000.00",
+      "remise": "500000.00",
+      "montant_ligne": "8500000.00"
+    }
+  },
+  {
+    "model": "commandes.opportunite",
+    "pk": 1,
+    "fields": {
+      "titre": "Vente tablettes éducatives",
+      "description": "Projet d'équipement de 5 écoles privées",
+      "commercial": 1,
+      "client": 2,
+      "etape": "NEGOCIATION",
+      "probabilite": 75,
+      "montant_estime": "15000000.00",
+      "montant_final": null,
+      "date_creation": "2026-04-01T00:00:00Z",
+      "date_cloture_prevue": "2026-06-30",
+      "date_cloture_effective": null,
+      "source": "Prospection terrain",
+      "concurrence": "Concurrent X",
+      "notes": "Le client attend le budget du prochain trimestre",
+      "prochaine_action": "Relancer le 25 mai",
+      "date_prochaine_action": "2026-05-25T10:00:00Z",
+      "commande": null,
+      "created_at": "2026-04-01T00:00:00Z",
+      "updated_at": "2026-05-16T00:00:00Z"
+    }
+  }
+]
