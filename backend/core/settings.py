@@ -51,7 +51,6 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     'apps.users',
     'apps.commerciaux',
-    'apps.clients',
     'apps.visites',
     'apps.gps',
     'apps.commandes',
