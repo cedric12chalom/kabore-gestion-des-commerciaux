@@ -5,7 +5,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
-from apps.core.gis import gis_models
+from apps.core.gis import distance_m, gis_models
 
 
 class Visite(models.Model):
@@ -32,12 +32,10 @@ class Visite(models.Model):
         related_name='visites',
         verbose_name=_('commercial'),
     )
-    client = models.ForeignKey(
-        'clients.Client',
-        on_delete=models.CASCADE,
-        related_name='visites',
-        verbose_name=_('client'),
-    )
+    contact_nom = models.CharField(_('nom du contact'), max_length=200, default='')
+    contact_telephone = models.CharField(_('téléphone'), max_length=30, blank=True)
+    quartier = models.CharField(_('quartier'), max_length=100, blank=True)
+    adresse_complete = models.TextField(_('adresse'), blank=True)
 
     # Planification
     type_visite = models.CharField(_('type'), max_length=20, choices=Type.choices, default=Type.VISITE_REGULIERE)
@@ -49,15 +47,9 @@ class Visite(models.Model):
     # Statut
     statut = models.CharField(_('statut'), max_length=20, choices=Statut.choices, default=Statut.PLANIFIEE, db_index=True)
 
-    # Check-in GPS
-    checkin_lat = models.DecimalField(_('check-in latitude'), max_digits=10, decimal_places=8, null=True, blank=True)
-    checkin_lng = models.DecimalField(_('check-in longitude'), max_digits=11, decimal_places=8, null=True, blank=True)
+    # GPS auto (capturé depuis PositionTempsReel au check-in/out)
     checkin_position = gis_models.PointField(_('position check-in'), srid=4326, geography=True, null=True, blank=True)
     checkin_timestamp = models.DateTimeField(_('heure check-in'), null=True, blank=True)
-
-    # Check-out GPS
-    checkout_lat = models.DecimalField(_('check-out latitude'), max_digits=10, decimal_places=8, null=True, blank=True)
-    checkout_lng = models.DecimalField(_('check-out longitude'), max_digits=11, decimal_places=8, null=True, blank=True)
     checkout_position = gis_models.PointField(_('position check-out'), srid=4326, geography=True, null=True, blank=True)
     checkout_timestamp = models.DateTimeField(_('heure check-out'), null=True, blank=True)
 
@@ -92,24 +84,16 @@ class Visite(models.Model):
         ordering = ['-date_prevue']
         indexes = [
             models.Index(fields=['commercial', 'statut', 'date_prevue']),
-            models.Index(fields=['client', 'date_prevue']),
+            models.Index(fields=['contact_nom', 'date_prevue']),
             models.Index(fields=['statut', 'date_prevue']),
         ]
 
     def __str__(self):
-        return f"Visite {self.client.raison_sociale} - {self.date_prevue.strftime('%d/%m/%Y')}"
+        return f"Visite {self.contact_nom} - {self.date_prevue.strftime('%d/%m/%Y')}"
 
     @property
     def is_validee(self):
-        """Une visite est validée si elle a un check-in GPS"""
         return self.checkin_position is not None and self.statut == self.Statut.EFFECTUEE
-
-    @property
-    def distance_checkin_client(self):
-        """Distance entre le check-in et la position du client (mètres)"""
-        if self.checkin_position and self.client.position:
-            return self.checkin_position.distance(self.client.position)
-        return None
 
 
 class RapportVisite(models.Model):

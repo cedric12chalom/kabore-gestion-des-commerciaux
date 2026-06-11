@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q, Count
 from django_filters.rest_framework import DjangoFilterBackend
 
+from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import (
     CustomTokenObtainPairSerializer,
     UserSerializer, UserCreateSerializer, UserUpdateSerializer,
@@ -18,6 +19,10 @@ from .serializers import (
 from .permissions import IsAdmin, IsAdminOrManager, IsOwnerOrAdmin, RoleBasedPermission
 
 User = get_user_model()
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class UserListView(generics.ListAPIView):

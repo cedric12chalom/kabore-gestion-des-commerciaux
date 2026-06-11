@@ -12,7 +12,13 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "frontend/dist/geocommerce-pro/browser/index.html"
+      "dest": "/frontend/dist/geocommerce-pro/browser/index.html"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/dist/geocommerce-pro/browser/index.html"
     }
   ]
 }

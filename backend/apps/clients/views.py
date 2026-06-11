@@ -20,8 +20,8 @@ from apps.users.permissions import IsAdminOrManager, IsCommercial, RoleBasedPerm
 class ClientSerializer(serializers.ModelSerializer):
     """Serializer inline pour éviter import circulaire"""
     commercial_nom = serializers.CharField(source='commercial_referent.nom_complet', read_only=True)
-    nombre_visites = serializers.IntegerField(read_only=True)
-    ca_total = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
+    nombre_visites = serializers.IntegerField(read_only=True)  # FIXED: conflict @property vs annotate
+    ca_total = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)  # FIXED: conflict @property vs annotate
     latitude = serializers.FloatField(read_only=True)
     longitude = serializers.FloatField(read_only=True)
 
@@ -67,6 +67,16 @@ class ClientListCreateView(generics.ListCreateAPIView):
             return qs.filter(commercial_referent__user=user)
 
         return qs.none()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        commercial_referent = serializer.validated_data.get('commercial_referent')
+
+        if user.is_commercial and commercial_referent is None and hasattr(user, 'commercial_profile'):
+            serializer.save(commercial_referent=user.commercial_profile)
+            return
+
+        serializer.save()
 
 
 class ClientDetailView(generics.RetrieveUpdateDestroyAPIView):

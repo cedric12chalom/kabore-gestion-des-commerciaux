@@ -17,7 +17,7 @@ import { NotificationService } from '../../../services/notification.service';
   template: `
     <mat-toolbar class="header-toolbar">
       <div class="header-left">
-        <button mat-icon-button (click)="toggleSidebar.emit()" class="menu-btn">
+        <button mat-icon-button (click)="toggleSidebar.emit()" class="menu-btn" aria-label="Basculer le menu lateral">
           <mat-icon>{{ sidebarCollapsed ? 'menu_open' : 'menu' }}</mat-icon>
         </button>
         <div class="breadcrumb">
@@ -26,8 +26,16 @@ import { NotificationService } from '../../../services/notification.service';
       </div>
 
       <div class="header-right">
-        <button mat-icon-button [matMenuTriggerFor]="notifMenu" class="header-btn">
-          <mat-icon [matBadge]="unreadCount()" [matBadgeHidden]="unreadCount() === 0" matBadgeColor="warn">
+        <button
+          mat-icon-button
+          [matMenuTriggerFor]="notifMenu"
+          class="header-btn"
+          [attr.aria-label]="'Notifications - ' + unreadCount() + ' non lues'"
+          [matBadge]="unreadCount()"
+          [matBadgeHidden]="unreadCount() === 0"
+          matBadgeColor="warn"
+          [matBadgeDescription]="unreadCount() + ' nouvelles notifications'">
+          <mat-icon aria-hidden="true">
             notifications
           </mat-icon>
         </button>
@@ -44,7 +52,7 @@ import { NotificationService } from '../../../services/notification.service';
           </div>
         </mat-menu>
 
-        <button mat-icon-button [matMenuTriggerFor]="profileMenu" class="header-btn profile-btn">
+        <button mat-icon-button [matMenuTriggerFor]="profileMenu" class="header-btn profile-btn" aria-label="Ouvrir le menu du profil">
           <div class="avatar">
             <img *ngIf="user?.photo" [src]="user?.photo" alt="">
             <mat-icon *ngIf="!user?.photo">account_circle</mat-icon>

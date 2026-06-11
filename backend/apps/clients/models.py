@@ -5,7 +5,7 @@ from django.db import models
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
-from apps.core.gis import gis_models
+from apps.core.gis import gis_models, point_coords
 
 
 class Client(models.Model):
@@ -92,23 +92,19 @@ class Client(models.Model):
 
     @property
     def latitude(self):
-        return self.position.y if self.position else None
+        coords = point_coords(self.position)
+        return coords[1] if coords else None
 
     @property
     def longitude(self):
-        return self.position.x if self.position else None
+        coords = point_coords(self.position)
+        return coords[0] if coords else None
 
-    @property
-    def nombre_visites(self):
-        return self.visites.count()
+    # FIXED: conflict @property vs annotate
+    # nombre_visites is provided by queryset annotate() in views
 
-    @property
-    def ca_total(self):
-        from apps.commandes.models import Commande
-        return Commande.objects.filter(
-            client=self,
-            statut__in=['VALIDEE', 'LIVREE']
-        ).aggregate(total=models.Sum('montant_total'))['total'] or 0
+    # FIXED: conflict @property vs annotate
+    # ca_total is provided by queryset annotate() in views
 
     def save(self, *args, **kwargs):
         # Si position est fournie mais pas ville, on ne fait rien

@@ -44,4 +44,12 @@ export class CommandeService {
   getPipelineStats(): Observable<any> {
     return this.http.get(`${this.baseUrl}/commandes/pipeline-stats/`);
   }
+
+  createOpportunite(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/commandes/opportunites/`, data);
+  }
+
+  livrerCommande(id: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/commandes/${id}/livrer/`, {});
+  }
 }

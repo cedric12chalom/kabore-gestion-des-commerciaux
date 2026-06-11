@@ -35,20 +35,28 @@ import { AuthService } from '../../services/auth.service';
           </div>
 
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-           <mat-form-field appearance="outline" class="full-width">
-  <mat-label>Nom d'utilisateur</mat-label>
-  <input matInput formControlName="username" placeholder="ex: admin">
-  <mat-icon matPrefix>person</mat-icon>
-  <mat-error *ngIf="loginForm.get('username')?.hasError('required')">
-    Le nom d'utilisateur est requis
-  </mat-error>
-</mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Adresse e-mail</mat-label>
+              <input matInput formControlName="email" placeholder="ex: admin@example.com">
+              <mat-icon matPrefix>email</mat-icon>
+              <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
+                L'adresse e-mail est requise
+              </mat-error>
+              <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
+                Veuillez entrer une adresse e-mail valide
+              </mat-error>
+            </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Mot de passe</mat-label>
               <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password">
               <mat-icon matPrefix>lock</mat-icon>
-              <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+              <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                (click)="hidePassword = !hidePassword"
+                [attr.aria-label]="hidePassword ? 'Afficher le mot de passe' : 'Masquer le mot de passe'">
                 <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
               <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
@@ -78,17 +86,14 @@ import { AuthService } from '../../services/auth.service';
           <div class="demo-accounts">
             <p class="demo-title">Comptes de démonstration</p>
             <div class="demo-list">
-              <div class="demo-item" (click)="fillDemo('admin', 'admin123')">
-                <mat-icon>admin_panel_settings</mat-icon>
-                <span>Admin</span>
-              </div>
-              <div class="demo-item" (click)="fillDemo('manager1', 'manager123')">
-                <mat-icon>supervisor_account</mat-icon>
-                <span>Manager</span>
-              </div>
-              <div class="demo-item" (click)="fillDemo('commercial1', 'commercial123')">
-                <mat-icon>person_pin</mat-icon>
-                <span>Commercial</span>
+              <div class="demo-item" *ngFor="let account of demoAccounts"
+                   (click)="fillDemo(account.email, account.password)">
+                <mat-icon>{{ account.icon }}</mat-icon>
+                <div class="demo-credentials">
+                  <span class="demo-role">{{ account.label }}</span>
+                  <span class="demo-email">{{ account.email }}</span>
+                  <span class="demo-password">Mot de passe : {{ account.password }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -182,14 +187,14 @@ import { AuthService } from '../../services/auth.service';
     }
     .demo-list {
       display: flex;
+      flex-direction: column;
       gap: 8px;
-      justify-content: center;
     }
     .demo-item {
       display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 12px;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
       background: var(--gray-100);
       border-radius: 8px;
       cursor: pointer;
@@ -202,10 +207,19 @@ import { AuthService } from '../../services/auth.service';
       color: white;
     }
     .demo-item mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
     }
+    .demo-credentials {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .demo-role { font-weight: 600; font-size: 13px; }
+    .demo-email { font-size: 11px; opacity: 0.9; }
+    .demo-password { font-size: 11px; opacity: 0.8; }
   `]
 })
 export class LoginComponent {
@@ -214,14 +228,22 @@ export class LoginComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackBar = inject(MatSnackBar);
-loginForm = this.fb.group({
-  username: ['', [Validators.required]],  // ← "username" au lieu de "email"
-  password: ['', [Validators.required, Validators.minLength(6)]],
+
+  demoAccounts = [
+    { label: 'Admin', email: 'admin@geocommerce.pro', password: 'admin123', icon: 'admin_panel_settings' },
+    { label: 'Manager', email: 'manager@geocommerce.pro', password: 'manager123', icon: 'supervisor_account' },
+    { label: 'Commercial', email: 'commercial@geocommerce.pro', password: 'commercial123', icon: 'person_pin' },
+    { label: 'Commercial 2', email: 'commercial2@geocommerce.pro', password: 'commercial123', icon: 'person_pin' },
+  ];
+
+  loginForm = this.fb.group({
+    email: ['', [Validators.email]],
+    password: ['', [Validators.minLength(6)]],
   });
 
-  hidePassword = true;
+  hidePassword = false;
   isLoading = false;
-  errorMessage = '';
+  errorMessage = "";
 
   onSubmit(): void {
     if (this.loginForm.invalid) return;
@@ -230,8 +252,8 @@ loginForm = this.fb.group({
     this.errorMessage = '';
 
     const credentials = {
-     username: this.loginForm.value.username!,
-     password: this.loginForm.value.password!,
+      email: this.loginForm.value.email!,
+      password: this.loginForm.value.password!,
     };
 
     this.authService.login(credentials).subscribe({
@@ -247,12 +269,19 @@ loginForm = this.fb.group({
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.error?.errors?.[0]?.message || `Nom d'utilisateur ou mot de passe incorrect`;
+        if (error.status === 0) {
+          this.errorMessage = 'Impossible de joindre le serveur. Lancez le backend : python manage.py runserver (port 8000).';
+        } else if (error.status === 401 || error.status === 400) {
+          const detail = error.error?.email?.[0] || error.error?.non_field_errors?.[0] || error.error?.detail;
+          this.errorMessage = detail || 'Email ou mot de passe incorrect.';
+        } else {
+          this.errorMessage = 'Erreur de connexion. Réessayez plus tard.';
+        }
       }
     });
   }
 
-  fillDemo(username: string, password: string): void {
-    this.loginForm.patchValue({ username, password });
+  fillDemo(email: string, password: string): void {
+    this.loginForm.patchValue({ email, password });
   }
 }

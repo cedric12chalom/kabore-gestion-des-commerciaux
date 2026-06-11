@@ -29,7 +29,7 @@ export class CommercialService {
   }
 
   updateCommercial(id: number, data: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/${id}/`, data);
+    return this.http.patch(`${this.baseUrl}/${id}/`, data);
   }
 
   deleteCommercial(id: number): Observable<any> {
@@ -52,6 +52,10 @@ export class CommercialService {
   // Produits
   getProduits(): Observable<any> {
     return this.http.get(`${this.baseUrl}/produits/`);
+  }
+
+  createProduit(data: Partial<Produit>): Observable<Produit> {
+    return this.http.post<Produit>(`${this.baseUrl}/produits/`, data);
   }
 
   // Objectifs

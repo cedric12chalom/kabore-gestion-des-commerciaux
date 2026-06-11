@@ -2,9 +2,8 @@
 Serializers pour l'authentification et la gestion des utilisateurs
 """
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
@@ -12,16 +11,48 @@ User = get_user_model()
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
-    Serializer JWT personnalisé avec claims supplémentaires
+    Serializer JWT avec connexion par EMAIL
     """
+    username_field = 'email'
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields.pop('username', None)
+        self.fields['email'] = serializers.EmailField(required=True)
 
     def validate(self, attrs):
-        data = super().validate(attrs)
+        email = attrs.get('email')
+        password = attrs.get('password')
 
-        # Ajouter des claims personnalisés au token
+        if not email or not password:
+            raise serializers.ValidationError(
+                {'non_field_errors': 'Email et mot de passe requis.'}
+            )
+
+        self.user = authenticate(
+              request=self.context.get('request'),
+              username=email.lower().strip(),  # ← On passe l'email comme username
+              password=password
+        )
+
+        if self.user is None:
+            raise serializers.ValidationError(
+                {'email': 'Email ou mot de passe incorrect.'}
+            )
+
+        if not self.user.is_active:
+            raise serializers.ValidationError(
+                {'email': 'Ce compte est desactive.'}
+            )
+
+        data = {}
+        refresh = self.get_token(self.user)
+        data['refresh'] = str(refresh)
+        data['access'] = str(refresh.access_token)
+
         data['user'] = {
             'id': self.user.id,
             'email': self.user.email,
+            'username': self.user.username,
             'first_name': self.user.first_name,
             'last_name': self.user.last_name,
             'role': self.user.role,
@@ -33,12 +64,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-
-        # Claims personnalisés dans le payload JWT
         token['role'] = user.role
         token['email'] = user.email
         token['full_name'] = user.get_full_name()
-
         return token
 
 
@@ -64,43 +92,35 @@ class UserSerializer(serializers.ModelSerializer):
         return 0
 
     def validate_email(self, value):
-        """Vérifier l'unicité de l'email (insensible à la casse)"""
         value = value.lower().strip()
         if User.objects.filter(email=value).exclude(
             id=self.instance.id if self.instance else None
         ).exists():
-            raise serializers.ValidationError("Cet email est déjà utilisé.")
+            raise serializers.ValidationError("Cet email est deja utilise.")
         return value
 
     def validate_phone(self, value):
-        """Validation format téléphone international"""
         if value and not value.startswith('+'):
             raise serializers.ValidationError(
-                "Le numéro doit inclure l'indicatif international (ex: +237...)"
+                "Le numero doit inclure l'indicatif international (ex: +237...)"
             )
         return value
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
-    """Serializer pour la création d'utilisateur avec mot de passe"""
     password = serializers.CharField(
-        write_only=True,
-        required=True,
-        validators=[validate_password],
+        write_only=True, required=True, validators=[validate_password],
         style={'input_type': 'password'}
     )
     password_confirm = serializers.CharField(
-        write_only=True,
-        required=True,
-        style={'input_type': 'password'}
+        write_only=True, required=True, style={'input_type': 'password'}
     )
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name',
-            'role', 'phone', 'photo', 'password', 'password_confirm',
-            'manager',
+            'role', 'phone', 'photo', 'password', 'password_confirm', 'manager',
         ]
 
     def validate(self, attrs):
@@ -108,14 +128,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'password_confirm': "Les mots de passe ne correspondent pas."}
             )
-
-        # Vérifier que le manager a bien le rôle MANAGER
         manager = attrs.get('manager')
         if manager and not manager.is_manager:
             raise serializers.ValidationError(
-                {'manager': "L'utilisateur sélectionné n'est pas un manager."}
+                {'manager': "L'utilisateur selectionne n'est pas un manager."}
             )
-
         return attrs
 
     def create(self, validated_data):
@@ -127,27 +144,20 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
-    """Serializer pour la mise à jour d'utilisateur"""
-
     class Meta:
         model = User
-        fields = [
-            'first_name', 'last_name', 'phone', 'photo',
-            'role', 'manager', 'is_active',
-        ]
+        fields = ['first_name', 'last_name', 'phone', 'photo', 'role', 'manager', 'is_active']
 
     def validate_role(self, value):
-        """Empêcher un commercial de devenir admin"""
         request = self.context.get('request')
         if request and not request.user.is_admin:
             raise serializers.ValidationError(
-                "Vous n'avez pas les droits pour modifier le rôle."
+                "Vous n'avez pas les droits pour modifier le role."
             )
         return value
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    """Serializer pour changer le mot de passe"""
     old_password = serializers.CharField(required=True, style={'input_type': 'password'})
     new_password = serializers.CharField(required=True, validators=[validate_password], style={'input_type': 'password'})
     new_password_confirm = serializers.CharField(required=True, style={'input_type': 'password'})
@@ -167,7 +177,6 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    """Serializer pour le profil de l'utilisateur connecté"""
     full_name = serializers.CharField(source='get_full_name', read_only=True)
 
     class Meta:

@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -27,7 +27,7 @@ import { Opportunite } from '../../models/commande.model';
     <div class="page-container">
       <div class="page-header">
         <h1>Opportunites</h1>
-        <button mat-raised-button color="primary">
+        <button mat-raised-button color="primary" (click)="createOpportunite()">
           <mat-icon>add</mat-icon>
           Nouvelle opportunite
         </button>
@@ -83,6 +83,7 @@ import { Opportunite } from '../../models/commande.model';
 })
 export class OpportunitesComponent implements OnInit {
   private commandeService = inject(CommandeService);
+  private router = inject(Router);
 
   opportunites: Opportunite[] = [];
   displayedColumns = ['titre', 'client', 'etape', 'probabilite', 'montant'];
@@ -102,5 +103,9 @@ export class OpportunitesComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  createOpportunite(): void {
+    this.router.navigate(['/opportunites/create']);
   }
 }

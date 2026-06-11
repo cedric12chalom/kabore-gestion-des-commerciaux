@@ -492,10 +492,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.dashboardService.getDashboardManager()
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-          next: (response) => {
-            if (response.success) {
-              this.managerData = response;
-            }
+          next: (data) => {
+            this.managerData = data;
             this.isLoading = false;
           },
           error: () => {
@@ -506,10 +504,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.dashboardService.getDashboardCommercial()
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-          next: (response) => {
-            if (response.success) {
-              this.commercialData = response;
-            }
+          next: (data) => {
+            this.commercialData = data;
             this.isLoading = false;
           },
           error: () => {

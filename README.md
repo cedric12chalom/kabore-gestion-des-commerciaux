@@ -192,7 +192,7 @@ psql -d geocommerce_pro -c "CREATE EXTENSION postgis;"
 
 # Migrations + données de démo
 python manage.py migrate
-python manage.py loaddata fixtures/demo_data.json
+python manage.py seed_demo
 
 # Créer un superuser (optionnel)
 python manage.py createsuperuser

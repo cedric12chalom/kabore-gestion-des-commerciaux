@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
@@ -27,7 +27,7 @@ import { Commercial } from '../../models/commercial.model';
     <div class="page-container">
       <div class="page-header">
         <h1>Commerciaux</h1>
-        <button mat-raised-button color="primary" routerLink="/commerciaux/create">
+        <button mat-raised-button color="primary" (click)="createCommercial()">
           <mat-icon>add</mat-icon> Nouveau commercial
         </button>
       </div>
@@ -98,7 +98,7 @@ import { Commercial } from '../../models/commercial.model';
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let com">
-              <button mat-icon-button [matMenuTriggerFor]="menu">
+              <button mat-icon-button [matMenuTriggerFor]="menu" [attr.aria-label]="'Actions pour ' + com.nom_complet">
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #menu="matMenu">
@@ -163,6 +163,7 @@ import { Commercial } from '../../models/commercial.model';
 })
 export class CommerciauxListComponent implements OnInit {
   private commercialService = inject(CommercialService);
+  private router = inject(Router);
 
   commerciaux: Commercial[] = [];
   isLoading = true;
@@ -199,5 +200,15 @@ export class CommerciauxListComponent implements OnInit {
 
   applyFilter() { this.loadCommerciaux(); }
   filterByStatut(statut: string) { this.selectedStatut = statut; this.loadCommerciaux(); }
-  deleteCommercial(id: number) { /* Confirmation + suppression */ }
+  deleteCommercial(id: number) {
+    if (!confirm('Supprimer ce commercial ? Son statut passera a inactif.')) return;
+
+    this.commercialService.deleteCommercial(id).subscribe({
+      next: () => this.loadCommerciaux(),
+    });
+  }
+
+  createCommercial(): void {
+    this.router.navigate(['/commerciaux/create']);
+  }
 }

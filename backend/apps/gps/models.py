@@ -1,187 +1,156 @@
 """
-Modèles : PositionGPS, HistoriqueParcours, AlerteZone
-Tracking GPS temps réel avec PostGIS
+Modèles GPS temps réel — PositionTempsReel + HistoriqueParcours
+La géolocalisation est automatique via WebSocket (aucune saisie manuelle).
 """
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from apps.core.gis import gis_models, Point
 
 
-class PositionGPS(models.Model):
-    """
-    Position GPS enregistrée toutes les 30 secondes.
-    Utilise PostGIS PointField pour les requêtes spatiales.
-    """
+class PositionTempsReel(models.Model):
+    """Position actuelle d'un commercial (OneToOne)."""
 
-    commercial = models.ForeignKey(
+    commercial = models.OneToOneField(
         'commerciaux.Commercial',
         on_delete=models.CASCADE,
-        related_name='positions',
+        related_name='position_actuelle',
         verbose_name=_('commercial'),
-        db_index=True,
     )
-
-    # Coordonnées GPS
-    position = gis_models.PointField(
-        _('position GPS'),
-        srid=4326,
-        geography=True,
-        db_index=True,
-    )
-    latitude = models.DecimalField(_('latitude'), max_digits=10, decimal_places=8, db_index=True)
-    longitude = models.DecimalField(_('longitude'), max_digits=11, decimal_places=8, db_index=True)
-
-    # Métadonnées GPS
-    precision = models.FloatField(_('précision (m)'), null=True, blank=True, validators=[MinValueValidator(0)])
-    altitude = models.FloatField(_('altitude (m)'), null=True, blank=True)
-    vitesse = models.FloatField(_('vitesse (km/h)'), null=True, blank=True, validators=[MinValueValidator(0)])
-    cap = models.FloatField(_('cap (degrés)'), null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(360)])
-
-    # Source
-    source = models.CharField(_('source'), max_length=20, default='GPS', choices=[
-        ('GPS', 'GPS'),
-        ('NETWORK', 'Réseau'),
-        ('MANUAL', 'Manuel'),
-    ])
-
-    # Timestamp
-    timestamp = models.DateTimeField(_('horodatage'), auto_now_add=True, db_index=True)
-
-    # Mode hors-ligne
-    is_sync = models.BooleanField(_('synchronisé'), default=True)
-    date_enregistrement_local = models.DateTimeField(_('date enregistrement local'), null=True, blank=True)
+    position = gis_models.PointField(_('position GPS'), srid=4326, geography=True)
+    precision = models.FloatField(_('précision (m)'), null=True, blank=True)
+    vitesse = models.FloatField(_('vitesse (km/h)'), null=True, blank=True)
+    cap = models.FloatField(_('cap (degrés)'), null=True, blank=True)
+    online = models.BooleanField(_('en ligne'), default=False, db_index=True)
+    dernier_update = models.DateTimeField(_('dernière mise à jour'), db_index=True)
 
     class Meta:
-        verbose_name = _('Position GPS')
-        verbose_name_plural = _('Positions GPS')
-        ordering = ['-timestamp']
-        indexes = [
-            models.Index(fields=['commercial', 'timestamp']),
-            models.Index(fields=['commercial', '-timestamp']),
-            models.Index(fields=['timestamp', 'is_sync']),
-        ]
+        verbose_name = _('Position temps réel')
+        verbose_name_plural = _('Positions temps réel')
+        indexes = [models.Index(fields=['online', 'dernier_update'])]
 
     def __str__(self):
-        return f"{self.commercial.nom_complet} - {self.latitude}, {self.longitude} @ {self.timestamp.strftime('%H:%M:%S')}"
+        status = 'online' if self.online else 'offline'
+        return f"{self.commercial} — {status}"
 
-    def save(self, *args, **kwargs):
-        # Synchroniser PointField avec lat/lng
-        if self.latitude and self.longitude and not self.position:
-            self.position = str(Point(float(self.longitude), float(self.latitude)))
-        elif settings.USE_GIS and self.position and not self.latitude:
-            self.longitude = self.position.x
-            self.latitude = self.position.y
-        super().save(*args, **kwargs)
+    @property
+    def latitude(self) -> float:
+        from apps.core.gis import point_coords
+        coords = point_coords(self.position)
+        return coords[1] if coords else 0
+
+    @property
+    def longitude(self) -> float:
+        from apps.core.gis import point_coords
+        coords = point_coords(self.position)
+        return coords[0] if coords else 0
+
+    @classmethod
+    def seuil_hors_ligne_secondes(cls) -> int:
+        return 120
+
+    def est_hors_ligne(self) -> bool:
+        return (timezone.now() - self.dernier_update).total_seconds() > self.seuil_hors_ligne_secondes()
+
+    @classmethod
+    def upsert_from_payload(cls, commercial, payload: dict) -> 'PositionTempsReel':
+        point = Point(float(payload['lng']), float(payload['lat']), srid=4326)
+        obj, _ = cls.objects.update_or_create(
+            commercial=commercial,
+            defaults={
+                'position': point,
+                'precision': payload.get('accuracy'),
+                'vitesse': payload.get('speed'),
+                'cap': payload.get('heading'),
+                'online': True,
+                'dernier_update': timezone.now(),
+            },
+        )
+        return obj
 
 
 class HistoriqueParcours(models.Model):
-    """
-    Résumé journalier du parcours d'un commercial.
-    Agrégation des positions pour performance.
-    """
+    """Trace GPS point-par-point (rétention 30 jours)."""
 
     commercial = models.ForeignKey(
         'commerciaux.Commercial',
         on_delete=models.CASCADE,
-        related_name='parcours',
-        verbose_name=_('commercial'),
+        related_name='historique_positions',
+        db_index=True,
     )
-
-    date = models.DateField(_('date'), db_index=True)
-
-    # Statistiques
-    distance_totale_km = models.DecimalField(_('distance totale (km)'), max_digits=10, decimal_places=2, default=0)
-    duree_totale_minutes = models.PositiveIntegerField(_('durée totale (min)'), default=0)
-    vitesse_moyenne_kmh = models.DecimalField(_('vitesse moyenne (km/h)'), max_digits=5, decimal_places=2, default=0)
-    nombre_positions = models.PositiveIntegerField(_('nombre de positions'), default=0)
-
-    # Zone
-    zone_visites = models.ManyToManyField(
-        'commerciaux.Zone',
-        blank=True,
-        related_name='parcours',
-        verbose_name=_('zones visitées'),
-    )
-
-    # Géométrie du parcours (LineString PostGIS)
-    trajectoire = gis_models.LineStringField(
-        _('trajectoire'),
-        srid=4326,
-        geography=True,
-        null=True,
-        blank=True,
-    )
-
-    # Première et dernière position
-    premiere_position = gis_models.PointField(_('première position'), srid=4326, geography=True, null=True)
-    derniere_position = gis_models.PointField(_('dernière position'), srid=4326, geography=True, null=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
+    position = gis_models.PointField(_('position'), srid=4326, geography=True)
+    precision = models.FloatField(null=True, blank=True)
+    vitesse = models.FloatField(null=True, blank=True)
+    cap = models.FloatField(null=True, blank=True)
+    timestamp = models.DateTimeField(_('horodatage'), db_index=True, default=timezone.now)
 
     class Meta:
-        verbose_name = _('Historique de Parcours')
-        verbose_name_plural = _('Historiques de Parcours')
-        ordering = ['-date']
-        unique_together = [['commercial', 'date']]
+        verbose_name = _('Historique parcours')
+        verbose_name_plural = _('Historiques parcours')
+        ordering = ['-timestamp']
+        indexes = [models.Index(fields=['commercial', '-timestamp'])]
 
     def __str__(self):
-        return f"Parcours {self.commercial.nom_complet} - {self.date}"
+        return f"{self.commercial} @ {self.timestamp:%Y-%m-%d %H:%M:%S}"
+
+    @classmethod
+    def creer_depuis_payload(cls, commercial, payload: dict) -> 'HistoriqueParcours':
+        return cls.objects.create(
+            commercial=commercial,
+            position=Point(float(payload['lng']), float(payload['lat']), srid=4326),
+            precision=payload.get('accuracy'),
+            vitesse=payload.get('speed'),
+            cap=payload.get('heading'),
+            timestamp=timezone.now(),
+        )
+
+    @classmethod
+    def purger_ancien(cls, jours: int = 30) -> int:
+        seuil = timezone.now() - timezone.timedelta(days=jours)
+        deleted, _ = cls.objects.filter(timestamp__lt=seuil).delete()
+        return deleted
 
 
 class AlerteZone(models.Model):
-    """Alerte lorsqu'un commercial sort de sa zone assignée"""
+    """Alerte lorsqu'un commercial sort de sa zone assignée."""
 
     class Type(models.TextChoices):
         SORTIE_ZONE = 'SORTIE', _('Sortie de zone')
         ENTREE_ZONE = 'ENTREE', _('Entrée dans zone')
-        INACTIVITE = 'INACTIVITE', _('Inactivité prolongée'),
+        INACTIVITE = 'INACTIVITE', _('Inactivité prolongée')
 
     class Statut(models.TextChoices):
         NOUVELLE = 'NOUVELLE', _('Nouvelle')
         LUE = 'LUE', _('Lue')
-        TRAITEE = 'TRAITEE', _('Traitée'),
+        TRAITEE = 'TRAITEE', _('Traitée')
 
     commercial = models.ForeignKey(
         'commerciaux.Commercial',
         on_delete=models.CASCADE,
         related_name='alertes',
-        verbose_name=_('commercial'),
     )
-    zone = models.ForeignKey(
-        'commerciaux.Zone',
+    zone_assignee = models.ForeignKey(
+        'commerciaux.ZoneAssignee',
         on_delete=models.CASCADE,
         related_name='alertes',
-        verbose_name=_('zone concernée'),
+        null=True,
+        blank=True,
     )
-
-    type_alerte = models.CharField(_('type'), max_length=20, choices=Type.choices)
-    statut = models.CharField(_('statut'), max_length=20, choices=Statut.choices, default=Statut.NOUVELLE)
-
-    # Position au moment de l'alerte
-    position = gis_models.PointField(_('position'), srid=4326, geography=True)
-    distance_zone_m = models.FloatField(_('distance de la zone (m)'), null=True, blank=True)
-
-    # Détails
-    message = models.TextField(_('message'), blank=True)
-    timestamp = models.DateTimeField(_('horodatage'), auto_now_add=True)
-
-    # Traitement
+    type_alerte = models.CharField(max_length=20, choices=Type.choices)
+    statut = models.CharField(max_length=20, choices=Statut.choices, default=Statut.NOUVELLE)
+    position = gis_models.PointField(srid=4326, geography=True)
+    distance_zone_m = models.FloatField(null=True, blank=True)
+    message = models.TextField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
     traite_par = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='alertes_traitees',
-        verbose_name=_('traité par'),
     )
-    date_traitement = models.DateTimeField(_('date traitement'), null=True, blank=True)
+    date_traitement = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        verbose_name = _('Alerte Zone')
-        verbose_name_plural = _('Alertes Zones')
         ordering = ['-timestamp']
-
-    def __str__(self):
-        return f"{self.get_type_alerte_display()} - {self.commercial.nom_complet}"

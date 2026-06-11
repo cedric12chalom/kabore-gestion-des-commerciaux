@@ -27,15 +27,17 @@ interface NavItem {
         <span class="logo-text" *ngIf="!collapsed">GeoCommerce</span>
       </div>
 
-      <nav class="nav-menu">
+      <nav class="nav-menu" aria-label="Navigation principale">
         <a 
           *ngFor="let item of navItems" 
           class="nav-item"
           [class.active]="isActive(item.route)"
           [routerLink]="item.route"
+          [attr.aria-label]="item.label"
+          [attr.aria-current]="isActive(item.route) ? 'page' : null"
           [matTooltip]="collapsed ? item.label : ''"
           matTooltipPosition="right">
-          <mat-icon>{{ item.icon }}</mat-icon>
+          <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
           <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
           <span class="nav-badge" *ngIf="item.badge && !collapsed">{{ item.badge }}</span>
         </a>
@@ -52,8 +54,8 @@ interface NavItem {
             <span class="user-role">{{ user?.role_display }}</span>
           </div>
         </div>
-        <button mat-icon-button class="logout-btn" (click)="logout()">
-          <mat-icon>logout</mat-icon>
+        <button mat-icon-button class="logout-btn" (click)="logout()" aria-label="Se deconnecter">
+          <mat-icon aria-hidden="true">logout</mat-icon>
         </button>
       </div>
     </div>
@@ -222,7 +224,6 @@ export class SidebarComponent {
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard', roles: ['ADMIN', 'MANAGER', 'COMMERCIAL'] },
     { label: 'Carte GPS', icon: 'map', route: '/carte', roles: ['ADMIN', 'MANAGER', 'COMMERCIAL'] },
     { label: 'Commerciaux', icon: 'people', route: '/commerciaux', roles: ['ADMIN', 'MANAGER'] },
-    { label: 'Clients', icon: 'business', route: '/clients', roles: ['ADMIN', 'MANAGER', 'COMMERCIAL'] },
     { label: 'Visites', icon: 'event_note', route: '/visites', roles: ['ADMIN', 'MANAGER', 'COMMERCIAL'] },
     { label: 'Commandes', icon: 'shopping_cart', route: '/commandes', roles: ['ADMIN', 'MANAGER', 'COMMERCIAL'] },
     { label: 'Opportunités', icon: 'trending_up', route: '/opportunites', roles: ['ADMIN', 'MANAGER', 'COMMERCIAL'] },

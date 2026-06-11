@@ -27,7 +27,7 @@ import { Commande } from '../../models/commande.model';
     <div class="page-container">
       <div class="page-header">
         <h1>Commandes</h1>
-        <button mat-raised-button color="primary">
+        <button mat-raised-button color="primary" routerLink="/commandes/create">
           <mat-icon>add</mat-icon>
           Nouvelle commande
         </button>
@@ -103,4 +103,5 @@ export class CommandesListComponent implements OnInit {
       }
     });
   }
+
 }

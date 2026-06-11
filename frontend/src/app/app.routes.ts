@@ -17,9 +17,20 @@ export const routes: Routes = [
   },
 
   // Commerciaux
+
   {
     path: 'commerciaux',
     loadComponent: () => import('./commerciaux/commerciaux-list/commerciaux-list.component').then(m => m.CommerciauxListComponent),
+    canActivate: [authGuard, () => roleGuard(['ADMIN', 'MANAGER'])],
+  },
+  {
+    path: 'commerciaux/create',
+    loadComponent: () => import('./commerciaux/commercial-form/commercial-form.component').then(m => m.CommercialFormComponent),
+    canActivate: [authGuard, () => roleGuard(['ADMIN', 'MANAGER'])],
+  },
+  {
+    path: 'commerciaux/:id/edit',
+    loadComponent: () => import('./commerciaux/commercial-form/commercial-form.component').then(m => m.CommercialFormComponent),
     canActivate: [authGuard, () => roleGuard(['ADMIN', 'MANAGER'])],
   },
   {
@@ -28,22 +39,15 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
 
-  // Clients
-  {
-    path: 'clients',
-    loadComponent: () => import('./clients/clients-list/clients-list.component').then(m => m.ClientsListComponent),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'clients/:id',
-    loadComponent: () => import('./clients/client-detail/client-detail.component').then(m => m.ClientDetailComponent),
-    canActivate: [authGuard],
-  },
-
   // Visites
   {
     path: 'visites',
     loadComponent: () => import('./visites/visites-list/visites-list.component').then(m => m.VisitesListComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'visites/create',
+    loadComponent: () => import('./visites/visite-form/visite-form.component').then(m => m.VisiteFormComponent),
     canActivate: [authGuard],
   },
   {
@@ -55,7 +59,7 @@ export const routes: Routes = [
   // GPS / Carte
   {
     path: 'carte',
-    loadComponent: () => import('./gps/carte-gps/carte-gps.component').then(m => m.CarteGpsComponent),
+    loadComponent: () => import('./gps/carte-temps-reel/carte-temps-reel.component').then(m => m.CarteTempsReelComponent),
     canActivate: [authGuard],
   },
   {
@@ -65,14 +69,25 @@ export const routes: Routes = [
   },
 
   // Commandes
+  
   {
     path: 'commandes',
     loadComponent: () => import('./commandes/commandes-list/commandes-list.component').then(m => m.CommandesListComponent),
     canActivate: [authGuard],
   },
   {
+    path: 'commandes/create',
+    loadComponent: () => import('./commandes/commandes-create-form').then(m => m.CommandeCreateFormComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'opportunites',
     loadComponent: () => import('./commandes/opportunites/opportunites.component').then(m => m.OpportunitesComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'opportunites/create',
+    loadComponent: () => import('./commandes/opportunites/opportunite-form.component').then(m => m.OpportuniteFormComponent),
     canActivate: [authGuard],
   },
 
@@ -95,6 +110,11 @@ export const routes: Routes = [
     path: 'parametres',
     loadComponent: () => import('./shared/pages/parametres/parametres.component').then(m => m.ParametresComponent),
     canActivate: [authGuard, () => roleGuard(['ADMIN'])],
+  },
+  {
+    path: 'visite/create',
+    loadComponent: () => import('./visites/visite-form/visite-form.component').then(m => m.VisiteFormComponent),
+    canActivate: [authGuard],
   },
 
   // Redirections

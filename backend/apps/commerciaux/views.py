@@ -10,12 +10,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
 from apps.core.gis import Point
 
-if settings.USE_GIS:
-    from django.contrib.gis.db.models.functions import Distance
-else:
-    Distance = None
-
-from .models import Commercial, Telephone, Zone, ObjectifCommercial, Produit
+from apps.gps.models import PositionTempsReel
+from .models import Commercial, Telephone, Zone, ZoneAssignee, ObjectifCommercial, Produit
 from .serializers import (
     CommercialListSerializer, CommercialDetailSerializer, CommercialCreateSerializer,
     TelephoneSerializer, ZoneSerializer, ObjectifSerializer, ProduitSerializer,
@@ -28,14 +24,14 @@ class CommercialListView(generics.ListAPIView):
     serializer_class = CommercialListSerializer
     permission_classes = [IsAdminOrManager]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['statut', 'zone', 'user__manager']
+    filterset_fields = ['statut', 'manager']
     search_fields = ['matricule', 'user__first_name', 'user__last_name', 'user__email']
-    ordering_fields = ['created_at', 'user__last_name', 'objectif_mensuel']
+    ordering_fields = ['created_at', 'user__last_name']
     ordering = ['-created_at']
 
     def get_queryset(self):
         user = self.request.user
-        qs = Commercial.objects.select_related('user', 'zone').prefetch_related('telephones')
+        qs = Commercial.objects.select_related('user', 'manager').prefetch_related('telephones')
 
         if user.is_admin:
             return qs.annotate(
@@ -62,7 +58,7 @@ class CommercialDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Commercial.objects.select_related('user', 'zone').prefetch_related('telephones', 'objectifs')
+        qs = Commercial.objects.select_related('user', 'manager').prefetch_related('telephones', 'objectifs', 'zones_assignees')
         if user.is_admin:
             return qs
         if user.is_manager:
@@ -78,6 +74,9 @@ class CommercialCreateView(generics.CreateAPIView):
     """POST /api/v1/commerciaux/"""
     serializer_class = CommercialCreateSerializer
     permission_classes = [IsAdminOrManager]
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
 
 
 class TelephoneListCreateView(generics.ListCreateAPIView):
@@ -156,18 +155,22 @@ class ObjectifListCreateView(generics.ListCreateAPIView):
 class ProduitListCreateView(generics.ListCreateAPIView):
     """GET/POST /api/v1/commerciaux/produits/"""
     serializer_class = ProduitSerializer
-    permission_classes = [IsAdminOrManager]
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['categorie', 'is_active']
     search_fields = ['reference', 'nom', 'description']
-    queryset = Produit.objects.all()
+    queryset = Produit.objects.filter(is_active=True)
 
 
 class ProduitDetailView(generics.RetrieveUpdateDestroyAPIView):
     """GET/PUT/DELETE /api/v1/commerciaux/produits/<id>/"""
     serializer_class = ProduitSerializer
-    permission_classes = [IsAdminOrManager]
     queryset = Produit.objects.all()
+
+    def get_permissions(self):
+        if self.request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return [IsAuthenticated()]
+        return [IsAdminOrManager()]
 
 
 # ========== ENDPOINTS SPÉCIAUX ==========
@@ -176,76 +179,17 @@ class ProduitDetailView(generics.RetrieveUpdateDestroyAPIView):
 @permission_classes([IsAuthenticated])
 def commerciaux_actifs_view(request):
     """GET /api/v1/commerciaux/actifs/ - Commerciaux actuellement en ligne (position récente)"""
-    from django.utils import timezone
-    from datetime import timedelta
-    from apps.gps.models import PositionGPS
-
-    # Commerciaux avec position dans les 5 dernières minutes
-    limite = timezone.now() - timedelta(minutes=5)
-
-    commerciaux_ids = PositionGPS.objects.filter(
-        timestamp__gte=limite
-    ).values_list('commercial_id', flat=True).distinct()
-
-    commerciaux = Commercial.objects.filter(
-        id__in=commerciaux_ids,
-        statut='ACTIF'
-    ).select_related('user')
-
+    positions = PositionTempsReel.objects.filter(online=True).select_related('commercial', 'commercial__user')
     data = []
-    for com in commerciaux:
-        last_pos = PositionGPS.objects.filter(commercial=com).order_by('-timestamp').first()
+    for pos in positions:
         data.append({
-            'id': com.id,
-            'nom': com.nom_complet,
-            'matricule': com.matricule,
+            'id': pos.commercial_id,
+            'nom': pos.commercial.nom_complet,
+            'matricule': pos.commercial.matricule,
             'position': {
-                'lat': float(last_pos.latitude) if last_pos else None,
-                'lng': float(last_pos.longitude) if last_pos else None,
-                'timestamp': last_pos.timestamp.isoformat() if last_pos else None,
-            } if last_pos else None,
+                'lat': pos.latitude,
+                'lng': pos.longitude,
+                'timestamp': pos.dernier_update.isoformat(),
+            },
         })
-
     return Response({'success': True, 'count': len(data), 'commerciaux': data})
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def clients_proches_view(request, commercial_id):
-    """GET /api/v1/commerciaux/<id>/clients-proches/ - Clients les plus proches du commercial"""
-    from apps.clients.models import Client
-    from apps.gps.models import PositionGPS
-    from django.contrib.gis.measure import D
-
-    try:
-        commercial = Commercial.objects.get(id=commercial_id)
-    except Commercial.DoesNotExist:
-        return Response({'success': False, 'error': 'Commercial non trouvé'}, status=404)
-
-    # Dernière position du commercial
-    last_pos = PositionGPS.objects.filter(commercial=commercial).order_by('-timestamp').first()
-    if not last_pos or not last_pos.position:
-        return Response({'success': False, 'error': 'Position GPS non disponible'}, status=400)
-
-    # Clients dans un rayon de 10km
-    clients = Client.objects.filter(
-        is_actif=True,
-        position__isnull=False,
-        position__distance_lte=(last_pos.position, D(km=10))
-    ).annotate(
-        distance=Distance('position', last_pos.position)
-    ).order_by('distance')[:20]
-
-    data = []
-    for client in clients:
-        data.append({
-            'id': client.id,
-            'raison_sociale': client.raison_sociale,
-            'distance_m': round(client.distance.m, 0),
-            'distance_km': round(client.distance.km, 2),
-            'adresse': client.adresse,
-            'ville': client.ville,
-            'position': {'lat': client.latitude, 'lng': client.longitude},
-        })
-
-    return Response({'success': True, 'clients': data})

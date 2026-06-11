@@ -2,82 +2,86 @@
   {
     "model": "users.user",
     "pk": 1,
-    "fields": {
-      "password": "pbkdf2_sha256$1200000$7PmY4Nf53HHxrygDSd1MFu$nw3s3giFkwGG+32IjPlhCYeZeLND1kmGVwrgcKAoi0g=", 
-      "last_login": "2026-05-16T10:00:00Z",
-      "is_superuser": true,
-      "username": "admin",
-      "first_name": "Daniel",
-      "last_name": "KINKEU",
-      "email": "admin@geocommerce.pro",
-      "is_staff": true,
-      "is_active": true,
-      "date_joined": "2026-01-01T00:00:00Z",
-      "role": "ADMIN",
-      "phone": "+237 677 77 77 77",
-      "photo": "",
-      "manager": null
-    }
+     "fields": {
+       "password": "pbkdf2_sha256$1200000$7PmY4Nf53HHxrygDSd1MFu$nw3s3giFkwGG+32IjPlhCYeZeLND1kmGVwrgcKAoi0g=", 
+       "last_login": "2026-05-16T10:00:00Z",
+       "is_superuser": true,
+       "username": "admin",
+       "first_name": "Daniel",
+       "last_name": "KINKEU",
+       "email": "admin@geocommerce.pro",
+       "is_staff": true,
+       "is_active": true,
+       "date_joined": "2026-01-01T00:00:00Z",
+       "last_modified": "2026-01-01T00:00:00Z",
+       "role": "ADMIN",
+       "phone": "+237 677 77 77 77",
+       "photo": "",
+       "manager": null
+     }
   },
   {
     "model": "users.user",
     "pk": 2,
-    "fields": {
-      "password": "pbkdf2_sha256$1200000$KundqL7GpibQPLcjbNElVc$jUcoKRocku2jU1gT5n+kKTydkANMlYnZev0K4WoVCHw=",
-      "last_login": "2026-05-16T10:00:00Z",
-      "is_superuser": false,
-      "username": "manager1",
-      "first_name": "Marie",
-      "last_name": "NGONO",
-      "email": "manager@geocommerce.pro",
-      "is_staff": false,
-      "is_active": true,
-      "date_joined": "2026-01-15T00:00:00Z",
-      "role": "MANAGER",
-      "phone": "+237 678 88 88 88",
-      "photo": "",
-      "manager": null
-    }
+     "fields": {
+       "password": "pbkdf2_sha256$1200000$KundqL7GpibQPLcjbNElVc$jUcoKRocku2jU1gT5n+kKTydkANMlYnZev0K4WoVCHw=",
+       "last_login": "2026-05-16T10:00:00Z",
+       "is_superuser": false,
+       "username": "manager1",
+       "first_name": "Marie",
+       "last_name": "NGONO",
+       "email": "manager@geocommerce.pro",
+       "is_staff": false,
+       "is_active": true,
+       "date_joined": "2026-01-15T00:00:00Z",
+       "last_modified": "2026-01-15T00:00:00Z",
+       "role": "MANAGER",
+       "phone": "+237 678 88 88 88",
+       "photo": "",
+       "manager": null
+     }
   },
   {
     "model": "users.user",
     "pk": 3,
-    "fields": {
-      "password": "pbkdf2_sha256$1200000$oXCabj5iwzd9kmInvaBU39$NOubNko5Byd+88pDfR4UsL4zW9ue05laa5Lmcd24yr0=",
-      "last_login": "2026-05-16T10:00:00Z",
-      "is_superuser": false,
-      "username": "commercial1",
-      "first_name": "Jean",
-      "last_name": "MBALLA",
-      "email": "commercial@geocommerce.pro",
-      "is_staff": false,
-      "is_active": true,
-      "date_joined": "2026-02-01T00:00:00Z",
-      "role": "COMMERCIAL",
-      "phone": "+237 690 11 11 11",
-      "photo": "",
-      "manager": 2
-    }
+     "fields": {
+       "password": "pbkdf2_sha256$1200000$oXCabj5iwzd9kmInvaBU39$NOubNko5Byd+88pDfR4UsL4zW9ue05laa5Lmcd24yr0=",
+       "last_login": "2026-05-16T10:00:00Z",
+       "is_superuser": false,
+       "username": "commercial1",
+       "first_name": "Jean",
+       "last_name": "MBALLA",
+       "email": "commercial@geocommerce.pro",
+       "is_staff": false,
+       "is_active": true,
+       "date_joined": "2026-02-01T00:00:00Z",
+       "last_modified": "2026-02-01T00:00:00Z",
+       "role": "COMMERCIAL",
+       "phone": "+237 690 11 11 11",
+       "photo": "",
+       "manager": 2
+     }
   },
   {
     "model": "users.user",
     "pk": 4,
-    "fields": {
-      "password": "pbkdf2_sha256$1200000$oXCabj5iwzd9kmInvaBU39$NOubNko5Byd+88pDfR4UsL4zW9ue05laa5Lmcd24yr0=",
-      "last_login": "2026-05-16T10:00:00Z",
-      "is_superuser": false,
-      "username": "commercial2",
-      "first_name": "Aline",
-      "last_name": "FOUDA",
-      "email": "commercial2@geocommerce.pro",
-      "is_staff": false,
-      "is_active": true,
-      "date_joined": "2026-02-15T00:00:00Z",
-      "role": "COMMERCIAL",
-      "phone": "+237 691 22 22 22",
-      "photo": "",
-      "manager": 2
-    }
+     "fields": {
+       "password": "pbkdf2_sha256$1200000$oXCabj5iwzd9kmInvaBU39$NOubNko5Byd+88pDfR4UsL4zW9ue05laa5Lmcd24yr0=",
+       "last_login": "2026-05-16T10:00:00Z",
+       "is_superuser": false,
+       "username": "commercial2",
+       "first_name": "Aline",
+       "last_name": "FOUDA",
+       "email": "commercial2@geocommerce.pro",
+       "is_staff": false,
+       "is_active": true,
+       "date_joined": "2026-02-15T00:00:00Z",
+       "last_modified": "2026-02-15T00:00:00Z",
+       "role": "COMMERCIAL",
+       "phone": "+237 691 22 22 22",
+       "photo": "",
+       "manager": 2
+     }
   },
   {
     "model": "commerciaux.zone",

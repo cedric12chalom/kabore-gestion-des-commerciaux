@@ -14,32 +14,37 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
     Serializer JWT personnalisé avec connexion par email
     """
-    username_field = 'email'
-
+    
     def validate(self, attrs):
+        email = attrs.get('email')
+        if email:
+            attrs['username'] = email
+        
         data = super().validate(attrs)
-
-        # Ajouter des claims personnalisés au token
+        
+        # Ajouter les données utilisateur dans la réponse
+        user = self.user
+        photo_url = None
+        if user.photo and hasattr(user.photo, 'url'):
+            photo_url = user.photo.url
+        
         data['user'] = {
-            'id': self.user.id,
-            'email': self.user.email,
-            'first_name': self.user.first_name,
-            'last_name': self.user.last_name,
-            'role': self.user.role,
-            'photo': self.user.photo.url if self.user.photo else None,
+            'id': user.id,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'role': user.role,
+            'photo': photo_url,
         }
-
+        
         return data
 
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-
-        # Claims personnalisés dans le payload JWT
         token['role'] = user.role
         token['email'] = user.email
         token['full_name'] = user.get_full_name()
-
         return token
 
 

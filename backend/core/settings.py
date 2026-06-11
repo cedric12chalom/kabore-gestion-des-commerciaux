@@ -348,3 +348,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.User'
+# ============================================================
+# AUTHENTICATION BACKENDS
+# ============================================================
+AUTHENTICATION_BACKENDS = [
+    'apps.users.authentication.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# ============================================================
+# SIMPLE JWT - Custom Serializer
+# ============================================================
+SIMPLE_JWT['TOKEN_OBTAIN_SERIALIZER'] = 'apps.users.serializers.CustomTokenObtainPairSerializer'

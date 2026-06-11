@@ -8,7 +8,7 @@ from .views import (
     ZoneListCreateView, ZoneDetailView,
     ObjectifListCreateView,
     ProduitListCreateView, ProduitDetailView,
-    commerciaux_actifs_view, clients_proches_view,
+    commerciaux_actifs_view,
 )
 
 urlpatterns = [
@@ -34,5 +34,4 @@ urlpatterns = [
 
     # Endpoints spéciaux
     path('actifs/', commerciaux_actifs_view, name='commerciaux-actifs'),
-    path('<int:commercial_id>/clients-proches/', clients_proches_view, name='clients-proches'),
 ]

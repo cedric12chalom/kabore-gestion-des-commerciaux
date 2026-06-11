@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatInputModule } from '@angular/material/input';
@@ -22,9 +22,9 @@ import { Client } from '../../models/client.model';
   ],
   template: `
     <div class="page-container">
-      <div class="page-header">
+        <div class="page-header">
         <h1>Clients</h1>
-        <button mat-raised-button color="primary">
+        <button mat-raised-button color="primary" (click)="navigateToCreate()">
           <mat-icon>add</mat-icon> Nouveau client
         </button>
       </div>
@@ -82,7 +82,7 @@ import { Client } from '../../models/client.model';
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let client">
-              <button mat-icon-button [matMenuTriggerFor]="menu">
+              <button mat-icon-button [matMenuTriggerFor]="menu" [attr.aria-label]="'Actions pour ' + client.raison_sociale">
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #menu="matMenu">
@@ -121,6 +121,7 @@ import { Client } from '../../models/client.model';
 })
 export class ClientsListComponent implements OnInit {
   private clientService = inject(ClientService);
+  private router = inject(Router);
 
   clients: Client[] = [];
   isLoading = true;
@@ -144,4 +145,8 @@ export class ClientsListComponent implements OnInit {
   }
 
   applyFilter() { this.loadClients(); }
+
+  navigateToCreate(): void {
+    this.router.navigate(['/clients/create']);
+  }
 }

@@ -2,11 +2,15 @@
 Modèles : Commercial, Téléphone, Zone géographique, Objectif, Produit
 """
 import uuid
-from django.db import models
+from django.db import OperationalError, ProgrammingError, models
 from django.core.validators import RegexValidator, MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
-from apps.core.gis import gis_models
+from apps.core.gis import distance_m, gis_models
+
+
+def generate_matricule():
+    return f"COM-{uuid.uuid4().hex[:8].upper()}"
 
 
 class Telephone(models.Model):
@@ -58,8 +62,51 @@ class Telephone(models.Model):
         super().save(*args, **kwargs)
 
 
+class ZoneAssignee(models.Model):
+    """Zone assignée à un commercial par son manager (polygone PostGIS)."""
+
+    commercial = models.ForeignKey(
+        'Commercial',
+        on_delete=models.CASCADE,
+        related_name='zones_assignees',
+        verbose_name=_('commercial'),
+    )
+    manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='zones_assignees',
+        limit_choices_to={'role': 'MANAGER'},
+        verbose_name=_('manager'),
+    )
+    nom = models.CharField(_('nom'), max_length=100, default='Zone')
+    polygone = gis_models.PolygonField(
+        _('zone géographique'),
+        srid=4326,
+        geography=True,
+    )
+    date_debut = models.DateField(_('date début'))
+    date_fin = models.DateField(_('date fin'), null=True, blank=True)
+    active = models.BooleanField(_('active'), default=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('Zone assignée')
+        verbose_name_plural = _('Zones assignées')
+        ordering = ['-date_debut']
+
+    def __str__(self):
+        return f"{self.nom} → {self.commercial}"
+
+    def save(self, *args, **kwargs):
+        if self.active:
+            ZoneAssignee.objects.filter(
+                commercial=self.commercial, active=True
+            ).exclude(pk=self.pk).update(active=False)
+        super().save(*args, **kwargs)
+
+
 class Zone(models.Model):
-    """Zone géographique assignée (polygone PostGIS)"""
+    """Zone géographique (legacy — préférer ZoneAssignee)."""
 
     nom = models.CharField(_('nom'), max_length=100, db_index=True)
     description = models.TextField(_('description'), blank=True)
@@ -125,7 +172,7 @@ class Commercial(models.Model):
         max_length=50,
         unique=True,
         db_index=True,
-        default=lambda: f"COM-{uuid.uuid4().hex[:8].upper()}"
+        default=generate_matricule,
     )
     statut = models.CharField(
         _('statut'),
@@ -135,30 +182,14 @@ class Commercial(models.Model):
         db_index=True,
     )
 
-    # Géolocalisation
-    zone = models.ForeignKey(
-        Zone,
-        on_delete=models.SET_NULL,
+    manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='equipe_commerciaux',
+        limit_choices_to={'role': 'MANAGER'},
+        verbose_name=_('manager responsable'),
         null=True,
         blank=True,
-        related_name='commerciaux',
-        verbose_name=_('zone assignée'),
-    )
-
-    # Objectifs
-    objectif_mensuel = models.DecimalField(
-        _('objectif mensuel (FCFA)'),
-        max_digits=15,
-        decimal_places=2,
-        default=0,
-        validators=[MinValueValidator(0)],
-    )
-    objectif_trimestriel = models.DecimalField(
-        _('objectif trimestriel (FCFA)'),
-        max_digits=15,
-        decimal_places=2,
-        default=0,
-        validators=[MinValueValidator(0)],
     )
 
     # Performance
@@ -191,9 +222,13 @@ class Commercial(models.Model):
         verbose_name_plural = _('Commerciaux')
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['statut', 'zone']),
+            models.Index(fields=['statut', 'manager']),
             models.Index(fields=['user', 'statut']),
         ]
+
+    @property
+    def zone_active(self):
+        return self.zones_assignees.filter(active=True).first()
 
     def __str__(self):
         return f"{self.user.get_full_name()} [{self.matricule}]"
@@ -208,57 +243,46 @@ class Commercial(models.Model):
 
     @property
     def taux_objectif_mensuel(self):
-        """Pourcentage d'atteinte de l'objectif mensuel"""
-        from apps.commandes.models import Commande
         from django.utils import timezone
-        import calendar
-
         now = timezone.now()
-        debut_mois = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        fin_mois = now.replace(
-            day=calendar.monthrange(now.year, now.month)[1],
-            hour=23, minute=59, second=59
-        )
-
-        ca_mois = Commande.objects.filter(
-            commercial=self,
-            date__range=(debut_mois, fin_mois),
-            statut__in=['VALIDEE', 'LIVREE']
-        ).aggregate(total=models.Sum('montant_total'))['total'] or 0
-
-        if self.objectif_mensuel > 0:
-            return round((ca_mois / self.objectif_mensuel) * 100, 2)
-        return 0
+        obj = self.objectifs.filter(
+            periode=ObjectifCommercial.Periode.MENSUEL,
+            annee=now.year,
+            mois=now.month,
+        ).first()
+        return obj.taux_realisation if obj else 0
 
     @property
     def distance_totale_jour(self):
-        """Distance totale parcourue aujourd'hui (km)"""
-        from apps.gps.models import PositionGPS
+        from apps.gps.models import HistoriqueParcours
         from django.utils import timezone
 
         today = timezone.now().date()
-        positions = PositionGPS.objects.filter(
-            commercial=self,
-            timestamp__date=today
-        ).order_by('timestamp')
+        try:
+            positions = list(HistoriqueParcours.objects.filter(
+                commercial=self,
+                timestamp__date=today,
+            ).order_by('timestamp'))
+        except (OperationalError, ProgrammingError):
+            return 0
 
-        if positions.count() < 2:
+        if len(positions) < 2:
             return 0
 
         total = 0
-        for i in range(1, positions.count()):
-            total += positions[i-1].position.distance(positions[i].position)
-
-        return round(total / 1000, 2)  # m → km
+        for i in range(1, len(positions)):
+            step = distance_m(positions[i - 1].position, positions[i].position)
+            if step is not None:
+                total += step
+        return round(total / 1000, 2)
 
 
 class ObjectifCommercial(models.Model):
-    """Objectifs de vente assignés à un commercial"""
+    """Objectifs de vente assignés à un commercial par le manager."""
 
     class Periode(models.TextChoices):
         MENSUEL = 'MENSUEL', _('Mensuel')
         TRIMESTRIEL = 'TRIMESTRIEL', _('Trimestriel')
-        ANNUEL = 'ANNUEL', _('Annuel')
 
     commercial = models.ForeignKey(
         Commercial,
@@ -267,44 +291,54 @@ class ObjectifCommercial(models.Model):
         verbose_name=_('commercial'),
     )
     periode = models.CharField(_('période'), max_length=20, choices=Periode.choices)
-    montant_cible = models.DecimalField(
+    annee = models.PositiveIntegerField(_('année'), default=2026)
+    mois = models.PositiveSmallIntegerField(_('mois'), null=True, blank=True)
+    trimestre = models.PositiveSmallIntegerField(_('trimestre'), null=True, blank=True)
+    cible = models.DecimalField(
         _('montant cible'),
         max_digits=15,
         decimal_places=2,
         validators=[MinValueValidator(1)],
     )
-    nombre_visites_cible = models.PositiveIntegerField(_('visites cibles'), default=0)
-    nombre_clients_cible = models.PositiveIntegerField(_('clients cibles'), default=0)
-
-    date_debut = models.DateField(_('date début'))
-    date_fin = models.DateField(_('date fin'))
-
-    montant_atteint = models.DecimalField(
-        _('montant atteint'),
+    realise = models.DecimalField(
+        _('montant réalisé'),
         max_digits=15,
         decimal_places=2,
         default=0,
     )
-    nombre_visites_atteint = models.PositiveIntegerField(_('visites atteintes'), default=0)
-    nombre_clients_atteint = models.PositiveIntegerField(_('clients atteints'), default=0)
-
+    date_debut = models.DateField(_('date début'), null=True, blank=True)
+    date_fin = models.DateField(_('date fin'), null=True, blank=True)
     is_atteint = models.BooleanField(_('objectif atteint'), default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = _('Objectif Commercial')
         verbose_name_plural = _('Objectifs Commerciaux')
-        ordering = ['-date_debut']
-        unique_together = [['commercial', 'periode', 'date_debut']]
+        ordering = ['-annee', '-mois']
+        unique_together = [['commercial', 'periode', 'annee', 'mois', 'trimestre']]
+
+    @property
+    def montant_cible(self):
+        return self.cible
+
+    @property
+    def montant_atteint(self):
+        return self.realise
 
     def __str__(self):
         return f"Objectif {self.periode} - {self.commercial.nom_complet}"
 
     @property
     def taux_realisation(self):
-        if self.montant_cible > 0:
-            return round((self.montant_atteint / self.montant_cible) * 100, 2)
+        if self.cible > 0:
+            return round((float(self.realise) / float(self.cible)) * 100, 2)
         return 0
+
+    def incrementer_realise(self, montant):
+        from decimal import Decimal
+        self.realise += Decimal(str(montant))
+        self.is_atteint = self.taux_realisation >= 100
+        self.save(update_fields=['realise', 'is_atteint'])
 
     def save(self, *args, **kwargs):
         self.is_atteint = self.taux_realisation >= 100

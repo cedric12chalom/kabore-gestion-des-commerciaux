@@ -1,4 +1,4 @@
-# GeoCommerce Pro - Backend Dependencies
+# GeoCommerce Pro - Backend Dependencies (PostgreSQL + PostGIS)
 # Django & DRF
 django>=4.2,<5.0
 djangorestframework>=3.14.0
@@ -6,26 +6,21 @@ django-cors-headers>=4.3.0
 djangorestframework-simplejwt>=5.3.0
 drf-spectacular>=0.27.0
 
-# Database & GIS
-psycopg2-binary>=2.9.9
-# PostGIS est installé via PostgreSQL, pas pip
+# GIS
+django-rest-framework-gis>=1.0.0
+psycopg2-binary>=2.9.0
 
-# Real-time (WebSocket)
+# Real-time GPS
 channels>=4.0.0
-channels-redis>=4.1.0
+channels-redis>=4.2.0
 daphne>=4.0.0
+redis>=5.0.0
 
 # Utilities
 Pillow>=10.1.0          # Images (photos profil)
 python-dotenv>=1.0.0    # Variables d'environnement
-gunicorn>=21.2.0        # Serveur WSGI production
 whitenoise>=6.6.0       # Fichiers statiques en production
-celery>=5.3.0           # Tâches asynchrones (notifications)
-redis>=5.0.0            # Broker Celery + cache
-
-# Sécurité
-django-ratelimit>=4.1.0 # Rate limiting
-bleach>=6.1.0           # Sanitization HTML
+django-filter>=23.0
 
 # Tests
 pytest>=7.4.0

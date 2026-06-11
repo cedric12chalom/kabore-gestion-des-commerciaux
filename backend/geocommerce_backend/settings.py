@@ -12,8 +12,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
+def env_bool(name, default=False):
+    return os.environ.get(name, str(default)).strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
+DEBUG = env_bool('DEBUG', True)
+
+# GIS support (PostGIS requis - False pour SQLite/local dev)
+USE_GIS = env_bool('USE_GIS', False)
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
@@ -25,12 +32,12 @@ DJANGO_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.gis',  # PostGIS support
+    # 'django.contrib.gis',  # Activation automatique pour PostGIS (prod)
 ]
 
 THIRD_PARTY_APPS = [
     'rest_framework',
-    'rest_framework_gis',
+    # 'rest_framework_gis',  # Activation automatique pour PostGIS (prod)
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
@@ -43,13 +50,11 @@ LOCAL_APPS = [
     'apps.core',
     'apps.users',
     'apps.commerciaux',
-    'apps.clients',
-    'apps.gps',
     'apps.visites',
     'apps.commandes',
-    'apps.opportunites',
     'apps.dashboard',
     'apps.notifications',
+    'apps.gps',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -88,17 +93,36 @@ TEMPLATES = [
 WSGI_APPLICATION = 'geocommerce_backend.wsgi.application'
 ASGI_APPLICATION = 'geocommerce_backend.asgi.application'
 
-# Database - PostgreSQL + PostGIS
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': os.environ.get('DB_NAME', 'geocommerce'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+# Database - SQLite (dev) / PostgreSQL + PostGIS (prod)
+if not USE_GIS:
+    DATABASES = {
+        # Default Django development DB (SQLite)
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+    # NOTE: removed the PostGIS 'geocommerce' placeholder when USE_GIS is False.
+    # Having a PostGIS engine declared forces Django to import GIS backends
+    # (which in turn import GDAL) even in dev environments where GDAL
+    # is not installed. Keep PostGIS configuration only when USE_GIS=True.
+else:
+    DATABASES = {
+        # Primary geospatial DB (PostGIS)
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': os.environ.get('DB_NAME', 'geocommerce'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        },
+        # Secondary default Django DB (SQLite)
+        'django_default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -155,6 +179,7 @@ REST_FRAMEWORK = {
         'gps': '120/minute',  # Throttle specifique pour les positions GPS
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'apps.core.exceptions.global_exception_handler',
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
     'DEFAULT_VERSION': 'v1',
     'ALLOWED_VERSIONS': ['v1'],
@@ -223,16 +248,21 @@ CORS_ALLOW_HEADERS = [
 # ============================================================
 # CHANNELS - WebSockets
 # ============================================================
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-        # En production, utiliser Redis:
-        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        # 'CONFIG': {
-        #     'hosts': [(os.environ.get('REDIS_URL', 'redis://localhost:6379'))],
-        # },
+CHANNEL_LAYERS_REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+
+if env_bool('USE_REDIS', False):
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {'hosts': [CHANNEL_LAYERS_REDIS_URL]},
+        }
     }
-}
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        }
+    }
 
 # ============================================================
 # DRF SPECTACULAR - OpenAPI/Swagger
@@ -315,3 +345,10 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+# ============================================================
+# AUTHENTICATION BACKENDS
+# ============================================================
+AUTHENTICATION_BACKENDS = [
+    'apps.users.authentication.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]

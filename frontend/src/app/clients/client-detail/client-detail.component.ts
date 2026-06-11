@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,7 +23,7 @@ import { ClientService } from '../../services/client.service';
             <span class="subtitle">{{ client.ville }} | Potentiel {{ client.potentiel }}</span>
           </div>
         </div>
-        <button mat-raised-button color="primary">
+        <button mat-raised-button color="primary" (click)="goToEdit()">
           <mat-icon>edit</mat-icon> Modifier
         </button>
       </div>
@@ -113,6 +113,7 @@ import { ClientService } from '../../services/client.service';
 export class ClientDetailComponent {
   private route = inject(ActivatedRoute);
   private clientService = inject(ClientService);
+  private router = inject(Router);
 
   client: any = null;
 
@@ -125,5 +126,9 @@ export class ClientDetailComponent {
     this.clientService.getClient(id).subscribe({
       next: (response) => { this.client = response; }
     });
+  }
+
+  goToEdit(): void {
+    this.router.navigate(['/clients', this.client?.id, 'edit']);
   }
 }

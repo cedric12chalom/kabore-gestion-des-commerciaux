@@ -14,6 +14,7 @@ import { SidebarComponent } from './shared/components/sidebar/sidebar.component'
 import { HeaderComponent } from './shared/components/header/header.component';
 import { AuthService } from './services/auth.service';
 import { NotificationService } from './services/notification.service';
+import { GPSTrackingService } from './services/gps-tracking.service';
 
 @Component({
   selector: 'app-root',
@@ -115,6 +116,7 @@ import { NotificationService } from './services/notification.service';
 export class AppComponent implements OnInit {
   authService = inject(AuthService);
   notificationService = inject(NotificationService);
+  private gpsTracking = inject(GPSTrackingService);
 
   isSidebarCollapsed = false;
   loading$ = this.notificationService.loading$;
@@ -126,6 +128,9 @@ export class AppComponent implements OnInit {
     // Démarrer le polling des notifications
     if (this.authService.isAuthenticated()) {
       this.notificationService.startPolling();
+      if (this.authService.isCommercial()) {
+        this.gpsTracking.startTracking();
+      }
     }
   }
 

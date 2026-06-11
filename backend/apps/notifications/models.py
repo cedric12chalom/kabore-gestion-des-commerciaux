@@ -80,15 +80,7 @@ class Message(models.Model):
 
     contenu = models.TextField(_('contenu'))
 
-    # Liens métier (optionnel)
-    client = models.ForeignKey(
-        'clients.Client',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='messages',
-        verbose_name=_('client lié'),
-    )
+    contact_nom = models.CharField(_('contact lié'), max_length=200, blank=True)
     visite = models.ForeignKey(
         'visites.Visite',
         on_delete=models.SET_NULL,

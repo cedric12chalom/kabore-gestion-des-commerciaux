@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,7 +24,7 @@ import { CommercialService } from '../../services/commercial.service';
             <span class="subtitle">{{ commercial.matricule }} | {{ commercial.statut_display }}</span>
           </div>
         </div>
-        <button mat-raised-button color="primary">
+        <button mat-raised-button color="primary" (click)="goToEdit()">
           <mat-icon>edit</mat-icon> Modifier
         </button>
       </div>
@@ -158,6 +158,7 @@ import { CommercialService } from '../../services/commercial.service';
 export class CommercialDetailComponent {
   private route = inject(ActivatedRoute);
   private commercialService = inject(CommercialService);
+  private router = inject(Router);
 
   commercial: any = null;
 
@@ -172,5 +173,9 @@ export class CommercialDetailComponent {
         this.commercial = response;
       }
     });
+  }
+
+  goToEdit(): void {
+    this.router.navigate(['/commerciaux', this.commercial?.id, 'edit']);
   }
 }

@@ -1,19 +1,16 @@
-"""
-URLs pour l'app GPS
-"""
 from django.urls import path
 from .views import (
-    PositionListCreateView, PositionDetailView,
-    HistoriqueParcoursView, AlerteZoneListView,
-    positions_temps_reel_view, replay_parcours_view, sync_offline_view,
+    positions_actuelles_view,
+    historique_parcours_view,
+    commerciaux_proches_view,
+    alertes_zone_view,
+    positions_temps_reel_view,
 )
 
 urlpatterns = [
-    path('positions/', PositionListCreateView.as_view(), name='gps-position-list'),
-    path('positions/<int:pk>/', PositionDetailView.as_view(), name='gps-position-detail'),
-    path('parcours/', HistoriqueParcoursView.as_view(), name='gps-parcours'),
-    path('alertes/', AlerteZoneListView.as_view(), name='gps-alertes'),
+    path('positions-actuelles/', positions_actuelles_view, name='gps-positions-actuelles'),
     path('temps-reel/', positions_temps_reel_view, name='gps-temps-reel'),
-    path('replay/<int:commercial_id>/', replay_parcours_view, name='gps-replay'),
-    path('sync/', sync_offline_view, name='gps-sync'),
+    path('<int:commercial_id>/historique-parcours/', historique_parcours_view, name='gps-historique'),
+    path('commerciaux-proches/', commerciaux_proches_view, name='gps-commerciaux-proches'),
+    path('alertes/', alertes_zone_view, name='gps-alertes'),
 ]

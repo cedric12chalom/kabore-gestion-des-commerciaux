@@ -27,10 +27,11 @@ class User(AbstractUser):
         MANAGER = 'MANAGER', _('Manager')
         COMMERCIAL = 'COMMERCIAL', _('Commercial')
 
-    # Email comme identifiant principal
+    # Email comme identifiant secondaire (unique et obligatoire)
     email = models.EmailField(
         _('adresse email'),
         unique=True,
+        blank=False,
         error_messages={
             'unique': _('Un utilisateur avec cet email existe déjà.'),
         }
@@ -81,8 +82,8 @@ class User(AbstractUser):
     )
 
     # Configuration auth
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'username']
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
 
     class Meta:
         verbose_name = _('Utilisateur')

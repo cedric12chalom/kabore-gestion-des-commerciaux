@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,7 +26,7 @@ import { Visite } from '../../models/visite.model';
           <button mat-stroked-button routerLink="/visites/calendrier">
             <mat-icon>calendar_month</mat-icon> Calendrier
           </button>
-          <button mat-raised-button color="primary">
+          <button mat-raised-button color="primary" (click)="planifierVisite()">
             <mat-icon>add</mat-icon> Planifier
           </button>
         </div>
@@ -77,7 +77,7 @@ import { Visite } from '../../models/visite.model';
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let v">
-              <button mat-icon-button [matMenuTriggerFor]="menu">
+              <button mat-icon-button [matMenuTriggerFor]="menu" [attr.aria-label]="'Actions pour la visite ' + v.id">
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #menu="matMenu">
@@ -118,6 +118,7 @@ import { Visite } from '../../models/visite.model';
 })
 export class VisitesListComponent implements OnInit {
   private visiteService = inject(VisiteService);
+  private router = inject(Router);
 
   visites: Visite[] = [];
   isLoading = true;
@@ -159,5 +160,9 @@ export class VisitesListComponent implements OnInit {
         }).subscribe(() => this.loadVisites());
       });
     }
+  }
+
+  planifierVisite(): void {
+    this.router.navigate(['/visites/create']);
   }
 }

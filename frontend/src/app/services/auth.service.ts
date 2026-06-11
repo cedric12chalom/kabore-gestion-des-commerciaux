@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpBackend } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
@@ -20,6 +20,9 @@ interface JwtPayload {
 })
 export class AuthService {
   private http = inject(HttpClient);
+  // HttpBackend + instance séparée de HttpClient pour bypasser les interceptors
+  private httpBackend = inject(HttpBackend);
+  private bypassHttp = new HttpClient(this.httpBackend);
   private router = inject(Router);
 
   private readonly ACCESS_TOKEN_KEY = 'geocommerce_access_token';
@@ -99,7 +102,8 @@ export class AuthService {
       return throwError(() => new Error('No refresh token'));
     }
 
-    return this.http.post(`${environment.authUrl}/refresh/`, { refresh })
+    // Utiliser bypassHttp pour ne pas repasser par les interceptors (évite réentrance)
+    return this.bypassHttp.post(`${environment.authUrl}/refresh/`, { refresh })
       .pipe(
         tap((response: any) => {
           this.setTokens(response.access, response.refresh || refresh);
@@ -116,7 +120,7 @@ export class AuthService {
   }
 
   getProfile(): Observable<User> {
-    return this.http.get<User>(`${environment.authUrl}/profile/`);
+    return this.http.get<User>(`${environment.authUrl}/6/`);
   }
 
   updateProfile(user: Partial<User>): Observable<User> {
