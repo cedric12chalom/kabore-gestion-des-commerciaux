@@ -1,0 +1,28 @@
+# render.yaml (à la racine du projet)
+services:
+  - type: web
+    name: geocommerce-backend
+    runtime: python
+    plan: free
+    buildCommand: |
+      pip install --no-cache-dir -r backend/requirements.txt
+      cd backend
+      python manage.py collectstatic --noinput
+      python manage.py migrate
+    startCommand: |
+      cd backend && daphne -b 0.0.0.0 -p $PORT core.asgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "geocommerce-backend.onrender.com,localhost"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://kabore-gestion-des-commerciaux.vercel.app,http://localhost:4200"
+
+  - type: redis
+    name: geocommerce-redis
+    plan: free
