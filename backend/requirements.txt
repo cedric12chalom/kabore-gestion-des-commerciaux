@@ -5,17 +5,17 @@ django-cors-headers==4.3.0
 djangorestframework-simplejwt==5.3.0
 drf-spectacular==0.27.0
 
-# WebSocket / Temps réel (OBLIGATOIRE pour GPS)
+# WebSocket / Temps réel
 channels==4.0.0
 channels-redis==4.1.0
 daphne==4.0.0
 redis==5.0.1
 
 # Static files & Utilities
-Pillow==10.1.0
+Pillow>=10.1.0          # ← Version flexible
 python-dotenv==1.0.0
 whitenoise==6.6.0
 
-# Export (optionnel)
+# Export
 reportlab==4.0.0
 openpyxl==3.1.0
