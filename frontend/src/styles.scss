@@ -1,6 +1,5 @@
 /* GeoCommerce Pro - Styles globaux */
 
-// Variables de couleur
 :root {
   --primary: #1a73e8;
   --primary-dark: #1557b0;
@@ -48,7 +47,7 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-// Scrollbar personnalisée
+/* Scrollbar personnalisée */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -68,7 +67,7 @@ html, body {
   background: var(--gray-500);
 }
 
-// Leaflet custom styles
+/* Leaflet custom styles */
 .leaflet-container {
   font-family: 'Inter', sans-serif;
 }
@@ -88,7 +87,7 @@ html, body {
   box-shadow: var(--shadow-md);
 }
 
-// Animations
+/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -112,7 +111,7 @@ html, body {
   animation: slideIn 0.3s ease-out;
 }
 
-// Classes utilitaires
+/* Classes utilitaires */
 .text-primary { color: var(--primary) !important; }
 .text-success { color: var(--success) !important; }
 .text-warning { color: var(--warning) !important; }
@@ -122,7 +121,7 @@ html, body {
 .bg-warning { background-color: var(--warning) !important; }
 .bg-danger { background-color: var(--danger) !important; }
 
-// Responsive
+/* Responsive */
 @media (max-width: 768px) {
   :root {
     --sidebar-width: 0px;
@@ -133,16 +132,16 @@ html, body {
   }
 }
 
-// Material overrides
+/* Material overrides */
 .mat-mdc-snack-bar-container {
-  &.success-snackbar {
-    --mdc-snackbar-container-color: var(--success);
-  }
-  &.error-snackbar {
-    --mdc-snackbar-container-color: var(--danger);
-  }
-  &.warning-snackbar {
-    --mdc-snackbar-container-color: var(--warning);
-    --mdc-snackbar-supporting-text-color: var(--dark);
-  }
+  --mdc-snackbar-container-color: var(--success);
+}
+
+.mat-mdc-snack-bar-container.error-snackbar {
+  --mdc-snackbar-container-color: var(--danger);
+}
+
+.mat-mdc-snack-bar-container.warning-snackbar {
+  --mdc-snackbar-container-color: var(--warning);
+  --mdc-snackbar-supporting-text-color: var(--dark);
 }
