@@ -309,13 +309,7 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'geocommerce.log',
-            'maxBytes': 10485760,  # 10MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-        },
+        
     },
     'loggers': {
         'django': {
