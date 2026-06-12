@@ -13,7 +13,7 @@ services:
       cd backend && DJANGO_SETTINGS_MODULE=geocommerce_backend.settings daphne -b 0.0.0.0 -p $PORT geocommerce_backend.asgi:application
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.11
       - key: DJANGO_SETTINGS_MODULE
         value: geocommerce_backend.settings
       - key: SECRET_KEY
