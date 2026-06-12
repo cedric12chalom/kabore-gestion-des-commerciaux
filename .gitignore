@@ -11,7 +11,7 @@ backend/env/
 backend/staticfiles/
 backend/media/
 
-# Environnement
+# Environment
 .env
 .env.local
 
@@ -26,3 +26,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Build
+dist/
+.vercel/
