@@ -309,15 +309,22 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        
+        # SUPPRIMEZ le handler 'file' ou AJOUTEZ-LE correctement
+        # 'file': {
+        #     'class': 'logging.handlers.RotatingFileHandler',
+        #     'filename': BASE_DIR / 'logs' / 'geocommerce.log',
+        #     'maxBytes': 10485760,
+        #     'backupCount': 5,
+        #     'formatter': 'verbose',
+        # },
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],  # ← UNIQUEMENT 'console'
             'level': 'INFO',
         },
         'apps': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],  # ← UNIQUEMENT 'console'
             'level': 'DEBUG',
             'propagate': True,
         },
