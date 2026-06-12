@@ -68,49 +68,49 @@ import { GPSTrackingService } from './services/gps-tracking.service';
     </ng-template>
   `,  // ← ✅ BACKTICK (`) ici, pas d'apostrophe (')
   styles: [`
-    .app-container {
-      height: 100vh;
-      overflow: hidden;
-    }
+     .app-container {
+       height: 100vh;
+       overflow: hidden;
+     }
 
-    .sidenav-container {
-      height: 100%;
-    }
+     .sidenav-container {
+       height: 100%;
+     }
 
-    .sidebar {
-      width: var(--sidebar-width);
-      background: var(--white);
-      border-right: 1px solid var(--gray-200);
-      transition: width 0.3s ease;
+     .sidebar {
+       width: var(--sidebar-width);
+       background: var(--white);
+       border-right: 1px solid var(--gray-200);
+       transition: width 0.3s ease;
+     }
 
-      &.collapsed {
-        width: var(--sidebar-collapsed);
-      }
-    }
+     .sidebar.collapsed {
+       width: var(--sidebar-collapsed);
+     }
 
-    .main-content {
-      background: var(--gray-100);
-      min-height: 100vh;
-      transition: margin-left 0.3s ease;
+     .main-content {
+       background: var(--gray-100);
+       min-height: 100vh;
+       transition: margin-left 0.3s ease;
+     }
 
-      &.expanded {
-        margin-left: 0;
-      }
-    }
+     .main-content.expanded {
+       margin-left: 0;
+     }
 
-    .page-content {
-      padding: 24px;
-      min-height: calc(100vh - var(--header-height));
-      overflow-y: auto;
-    }
+     .page-content {
+       padding: 24px;
+       min-height: calc(100vh - var(--header-height));
+       overflow-y: auto;
+     }
 
-    @media (max-width: 768px) {
-      .sidebar {
-        width: 0 !important;
-        display: none;
-      }
-    }
-  `]
+     @media (max-width: 768px) {
+       .sidebar {
+         width: 0 !important;
+         display: none;
+       }
+     }
+   `]
 
 })
 export class AppComponent implements OnInit {
