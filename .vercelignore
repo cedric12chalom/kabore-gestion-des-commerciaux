@@ -1,0 +1,11 @@
+backend/
+.kilo/
+.sixth/
+.git/
+*.md
+*.log
+*.sqlite3
+dist/
+node_modules/
+src/
+vercel.json
