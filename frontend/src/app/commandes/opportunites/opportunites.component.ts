@@ -44,9 +44,9 @@ import { Opportunite } from '../../models/commande.model';
             <td mat-cell *matCellDef="let opportunite">{{ opportunite.titre }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="client">
-            <th mat-header-cell *matHeaderCellDef>Client</th>
-            <td mat-cell *matCellDef="let opportunite">{{ opportunite.client_nom || '-' }}</td>
+          <ng-container matColumnDef="contact">
+            <th mat-header-cell *matHeaderCellDef>Point de vente</th>
+            <td mat-cell *matCellDef="let opportunite">{{ opportunite.contact_nom || '-' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="etape">
@@ -86,7 +86,7 @@ export class OpportunitesComponent implements OnInit {
   private router = inject(Router);
 
   opportunites: Opportunite[] = [];
-  displayedColumns = ['titre', 'client', 'etape', 'probabilite', 'montant'];
+  displayedColumns = ['titre', 'contact', 'etape', 'probabilite', 'montant'];
   isLoading = true;
 
   ngOnInit(): void {

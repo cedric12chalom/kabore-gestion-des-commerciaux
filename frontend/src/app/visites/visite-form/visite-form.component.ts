@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -12,9 +12,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { HttpClient } from '@angular/common/http';
 import { VisiteService } from '../../services/visite.service';
-import { CommercialService } from '../../services/commercial.service';
-import { ClientService } from '../../services/client.service';
+import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-visite-form',
@@ -32,7 +33,7 @@ import { ClientService } from '../../services/client.service';
           <button mat-icon-button routerLink="/visites">
             <mat-icon>arrow_back</mat-icon>
           </button>
-          <h1>Planifier une visite</h1>
+          <h1>Planifier un contrôle PDV</h1>
         </div>
       </div>
 
@@ -42,30 +43,46 @@ import { ClientService } from '../../services/client.service';
         </div>
 
         <form [formGroup]="visiteForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
-          <h3>Participants</h3>
+          <h3>Responsable</h3>
           <div class="form-grid">
-            <mat-form-field appearance="outline">
-              <mat-label>Commercial *</mat-label>
-              <mat-select formControlName="commercial">
-                <mat-option *ngFor="let com of commerciaux" [value]="com.id">
-                  {{ com.nom_complet }}
+            <mat-form-field appearance="outline" *ngIf="isAdmin">
+              <mat-label>Manager *</mat-label>
+              <mat-select formControlName="manager">
+                <mat-option *ngFor="let mgr of managers" [value]="mgr.id">
+                  {{ mgr.first_name }} {{ mgr.last_name }}
                 </mat-option>
               </mat-select>
-              <mat-error *ngIf="visiteForm.get('commercial')?.hasError('required')">
-                Le commercial est requis
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" *ngIf="!isAdmin">
+              <mat-label>Manager</mat-label>
+              <input matInput [value]="currentManagerName" readonly>
+            </mat-form-field>
+          </div>
+
+          <h3>Point de vente</h3>
+          <div class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Nom du point de vente *</mat-label>
+              <input matInput formControlName="point_vente_nom">
+              <mat-error *ngIf="visiteForm.get('point_vente_nom')?.hasError('required')">
+                Le point de vente est requis
               </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>Client *</mat-label>
-              <mat-select formControlName="client">
-                <mat-option *ngFor="let cl of clients" [value]="cl.id">
-                  {{ cl.raison_sociale }}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="visiteForm.get('client')?.hasError('required')">
-                Le client est requis
-              </mat-error>
+              <mat-label>Téléphone</mat-label>
+              <input matInput formControlName="contact_telephone">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Quartier</mat-label>
+              <input matInput formControlName="quartier">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Adresse</mat-label>
+              <textarea matInput formControlName="adresse_complete" rows="2"></textarea>
             </mat-form-field>
           </div>
 
@@ -74,40 +91,30 @@ import { ClientService } from '../../services/client.service';
             <mat-form-field appearance="outline">
               <mat-label>Type de visite *</mat-label>
               <mat-select formControlName="type_visite">
+                <mat-option value="CONTROLE_PDV">Contrôle point de vente</mat-option>
                 <mat-option value="PRESENTATION">Présentation</mat-option>
                 <mat-option value="REGULIERE">Visite régulière</mat-option>
-                <mat-option value="RECOUVREMENT">Recouvrement</mat-option>
-                <mat-option value="LIVRAISON">Livraison</mat-option>
                 <mat-option value="AUTRE">Autre</mat-option>
               </mat-select>
-              <mat-error *ngIf="visiteForm.get('type_visite')?.hasError('required')">
-                Le type de visite est requis
-              </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-            <mat-label>Date prévue *</mat-label>
-            <input matInput [matDatepicker]="picker" formControlName="date_prevue">
-            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-              <mat-error *ngIf="visiteForm.get('date_prevue')?.hasError('required')">
-                La date est requise
-              </mat-error>
+              <mat-label>Date prévue *</mat-label>
+              <input matInput [matDatepicker]="picker" formControlName="date_prevue">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
               <mat-label>Durée estimée (min) *</mat-label>
               <input matInput type="number" formControlName="duree_estimee">
-              <mat-error *ngIf="visiteForm.get('duree_estimee')?.hasError('required')">
-                La durée est requise
-              </mat-error>
             </mat-form-field>
           </div>
 
           <h3>Objectif</h3>
           <div class="form-grid">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Objectif de la visite</mat-label>
+              <mat-label>Objectif du contrôle</mat-label>
               <textarea matInput formControlName="objectif" rows="3"></textarea>
             </mat-form-field>
           </div>
@@ -139,41 +146,57 @@ import { ClientService } from '../../services/client.service';
 export class VisiteFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private visiteService = inject(VisiteService);
-  private commercialService = inject(CommercialService);
-  private clientService = inject(ClientService);
+  private authService = inject(AuthService);
+  private http = inject(HttpClient);
   private router = inject(Router);
-  private snackBar: MatSnackBar = inject(MatSnackBar);
+  private snackBar = inject(MatSnackBar);
 
   isLoading = false;
   isSaving = false;
-  commerciaux: any[] = [];
-  clients: any[] = [];
+  isAdmin = false;
+  managers: any[] = [];
+  currentManagerName = '';
 
   visiteForm = this.fb.group({
-    commercial: [null as number | null, Validators.required],
-    client: [null as number | null, Validators.required],
-    type_visite: ['', Validators.required],
+    manager: [null as number | null],
+    point_vente_nom: ['', Validators.required],
+    contact_telephone: [''],
+    quartier: [''],
+    adresse_complete: [''],
+    type_visite: ['CONTROLE_PDV', Validators.required],
     date_prevue: [new Date(), Validators.required],
     duree_estimee: [60, [Validators.required, Validators.min(1)]],
     objectif: [''],
   });
 
   ngOnInit(): void {
-    this.loadCommerciaux();
-    this.loadClients();
+    this.isAdmin = this.authService.isAdmin();
+
+    if (!this.authService.isAdmin() && !this.authService.isManager()) {
+      this.snackBar.open('Seuls Admin/Manager peuvent planifier des visites', 'Fermer', { duration: 3000 });
+      this.router.navigate(['/visites']);
+      return;
+    }
+
+    const user = this.authService.getCurrentUser();
+    if (user && this.authService.isManager()) {
+      this.currentManagerName = `${user.first_name} ${user.last_name}`.trim();
+      this.visiteForm.patchValue({ manager: user.id });
+    }
+
+    if (this.isAdmin) {
+      this.loadManagers();
+    }
   }
 
-  loadCommerciaux(): void {
-    this.commercialService.getCommerciaux().subscribe({
-      next: (response: any) => { this.commerciaux = response.results || response; },
-      error: () => {}
-    });
-  }
-
-  loadClients(): void {
-    this.clientService.getClients().subscribe({
-      next: (response: any) => { this.clients = response.results || response; },
-      error: () => {}
+  loadManagers(): void {
+    this.isLoading = true;
+    this.http.get<any>(`${environment.authUrl}/users/`, { params: { role: 'MANAGER' } }).subscribe({
+      next: (response) => {
+        this.managers = response.results || response || [];
+        this.isLoading = false;
+      },
+      error: () => { this.isLoading = false; }
     });
   }
 
@@ -182,13 +205,14 @@ export class VisiteFormComponent implements OnInit {
     this.isSaving = true;
 
     const dateValue = this.visiteForm.value.date_prevue;
-    const dateStr = dateValue instanceof Date
-      ? dateValue.toISOString()
-      : dateValue;
+    const dateStr = dateValue instanceof Date ? dateValue.toISOString() : dateValue;
 
     const data = {
-      commercial: this.visiteForm.value.commercial,
-      client: this.visiteForm.value.client,
+      manager: this.visiteForm.value.manager,
+      point_vente_nom: this.visiteForm.value.point_vente_nom?.trim(),
+      contact_telephone: this.visiteForm.value.contact_telephone?.trim() || '',
+      quartier: this.visiteForm.value.quartier?.trim() || '',
+      adresse_complete: this.visiteForm.value.adresse_complete?.trim() || '',
       type_visite: this.visiteForm.value.type_visite,
       date_prevue: dateStr,
       duree_estimee: this.visiteForm.value.duree_estimee,

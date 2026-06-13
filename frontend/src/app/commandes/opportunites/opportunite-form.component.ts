@@ -10,7 +10,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { ClientService } from '../../services/client.service';
 import { CommercialService } from '../../services/commercial.service';
 import { CommandeService } from '../../services/commande.service';
 
@@ -54,13 +53,14 @@ import { CommandeService } from '../../services/commande.service';
               <input matInput formControlName="titre">
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Client *</mat-label>
-              <mat-select formControlName="client">
-                <mat-option *ngFor="let client of clients" [value]="client.id">
-                  {{ client.raison_sociale }}
-                </mat-option>
-              </mat-select>
+            <mat-form-field appearance="outline">
+              <mat-label>Point de vente / Contact *</mat-label>
+              <input matInput formControlName="contact_nom">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Téléphone</mat-label>
+              <input matInput formControlName="contact_telephone">
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
@@ -103,21 +103,6 @@ import { CommandeService } from '../../services/commande.service';
               <input matInput type="date" formControlName="date_cloture_prevue">
             </mat-form-field>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Date prochaine action</mat-label>
-              <input matInput type="datetime-local" formControlName="date_prochaine_action">
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Source</mat-label>
-              <input matInput formControlName="source">
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Concurrence</mat-label>
-              <input matInput formControlName="concurrence">
-            </mat-form-field>
-
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Description</mat-label>
               <textarea matInput rows="3" formControlName="description"></textarea>
@@ -126,11 +111,6 @@ import { CommandeService } from '../../services/commande.service';
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Notes</mat-label>
               <textarea matInput rows="3" formControlName="notes"></textarea>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Prochaine action</mat-label>
-              <input matInput formControlName="prochaine_action">
             </mat-form-field>
           </div>
 
@@ -161,7 +141,6 @@ import { CommandeService } from '../../services/commande.service';
 })
 export class OpportuniteFormComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private clientService = inject(ClientService);
   private commercialService = inject(CommercialService);
   private commandeService = inject(CommandeService);
   private route = inject(ActivatedRoute);
@@ -170,23 +149,19 @@ export class OpportuniteFormComponent implements OnInit {
 
   isLoading = true;
   isSaving = false;
-  clients: any[] = [];
   commerciaux: any[] = [];
 
   opportuniteForm = this.fb.group({
     titre: ['', Validators.required],
     description: [''],
     commercial: [null as number | null],
-    client: [null as number | null, Validators.required],
+    contact_nom: ['', Validators.required],
+    contact_telephone: [''],
     etape: ['PROSPECT', Validators.required],
     probabilite: [20, [Validators.required, Validators.min(0), Validators.max(100)]],
     montant_estime: [0, [Validators.required, Validators.min(0)]],
     date_cloture_prevue: [''],
-    source: [''],
-    concurrence: [''],
     notes: [''],
-    prochaine_action: [''],
-    date_prochaine_action: [''],
   });
 
   ngOnInit(): void {
@@ -195,30 +170,15 @@ export class OpportuniteFormComponent implements OnInit {
 
   loadData(): void {
     this.isLoading = true;
-    let pending = 2;
-
-    const done = (): void => {
-      pending -= 1;
-      if (pending === 0) this.isLoading = false;
-    };
-
-    this.clientService.getClients().subscribe({
-      next: (response) => {
-        this.clients = response.results || response || [];
-        done();
-      },
-      error: () => done()
-    });
-
     this.commercialService.getCommerciaux().subscribe({
       next: (response) => {
         this.commerciaux = response.results || response || [];
         if (this.commerciaux.length === 1) {
           this.opportuniteForm.patchValue({ commercial: this.commerciaux[0].id });
         }
-        done();
+        this.isLoading = false;
       },
-      error: () => done()
+      error: () => { this.isLoading = false; }
     });
   }
 
@@ -231,16 +191,13 @@ export class OpportuniteFormComponent implements OnInit {
       titre: value.titre?.trim(),
       description: value.description?.trim() || '',
       commercial: value.commercial,
-      client: value.client,
+      contact_nom: value.contact_nom?.trim(),
+      contact_telephone: value.contact_telephone?.trim() || '',
       etape: value.etape,
       probabilite: Number(value.probabilite),
       montant_estime: Number(value.montant_estime),
       date_cloture_prevue: value.date_cloture_prevue || null,
-      source: value.source?.trim() || '',
-      concurrence: value.concurrence?.trim() || '',
       notes: value.notes?.trim() || '',
-      prochaine_action: value.prochaine_action?.trim() || '',
-      date_prochaine_action: value.date_prochaine_action || null,
     };
 
     this.commandeService.createOpportunite(payload).subscribe({

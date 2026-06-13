@@ -1,10 +1,11 @@
 export interface Visite {
   id: number;
-  commercial: number;
-  commercial_nom?: string;
-  client: number;
-  client_nom?: string;
-  client_position?: { lat: number; lng: number } | null;
+  manager: number;
+  manager_nom?: string;
+  point_vente_nom: string;
+  contact_telephone?: string;
+  quartier?: string;
+  adresse_complete?: string;
   type_visite: string;
   type_display?: string;
   date_prevue: string;
@@ -15,16 +16,11 @@ export interface Visite {
   statut: 'PLANIFIEE' | 'EN_COURS' | 'EFFECTUEE' | 'REPORTEE' | 'ANNULEE';
   statut_display?: string;
   is_validee?: boolean;
-  checkin_lat?: number;
-  checkin_lng?: number;
   checkin_timestamp?: string;
-  checkout_lat?: number;
-  checkout_lng?: number;
   checkout_timestamp?: string;
   compte_rendu?: string;
   actions_suivantes?: string;
-  satisfaction_client?: number;
-  distance_checkin?: number;
+  note_controle?: number;
 }
 
 export interface CalendrierEvent {
@@ -33,6 +29,6 @@ export interface CalendrierEvent {
   date: string;
   statut: string;
   type: string;
-  commercial: string;
-  client: string;
+  manager: string;
+  point_vente: string;
 }

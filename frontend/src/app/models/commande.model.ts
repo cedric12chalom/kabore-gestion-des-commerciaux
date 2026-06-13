@@ -3,8 +3,10 @@ export interface Commande {
   reference: string;
   commercial: number;
   commercial_nom?: string;
-  client: number;
-  client_nom?: string;
+  contact_nom: string;
+  contact_telephone?: string;
+  quartier?: string;
+  adresse_complete?: string;
   date: string;
   date_validation?: string;
   date_livraison_prevue?: string;
@@ -38,8 +40,8 @@ export interface Opportunite {
   description?: string;
   commercial: number;
   commercial_nom?: string;
-  client: number;
-  client_nom?: string;
+  contact_nom: string;
+  contact_telephone?: string;
   etape: string;
   etape_display?: string;
   probabilite: number;

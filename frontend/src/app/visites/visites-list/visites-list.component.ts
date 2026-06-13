@@ -9,6 +9,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { VisiteService } from '../../services/visite.service';
+import { AuthService } from '../../services/auth.service';
 import { Visite } from '../../models/visite.model';
 
 @Component({
@@ -21,8 +22,8 @@ import { Visite } from '../../models/visite.model';
   template: `
     <div class="page-container">
       <div class="page-header">
-        <h1>Visites</h1>
-        <div class="header-actions">
+        <h1>Contrôles points de vente</h1>
+        <div class="header-actions" *ngIf="canManage">
           <button mat-stroked-button routerLink="/visites/calendrier">
             <mat-icon>calendar_month</mat-icon> Calendrier
           </button>
@@ -37,26 +38,31 @@ import { Visite } from '../../models/visite.model';
           <mat-spinner diameter="40"></mat-spinner>
         </div>
 
-        <table mat-table [dataSource]="visites" class="visite-table" *ngIf="!isLoading">
+        <div class="empty-state" *ngIf="!isLoading && visites.length === 0">
+          <mat-icon>store</mat-icon>
+          <p>Aucune visite planifiée</p>
+        </div>
+
+        <table mat-table [dataSource]="visites" class="visite-table" *ngIf="!isLoading && visites.length > 0">
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef>Date</th>
             <td mat-cell *matCellDef="let v">{{ v.date_prevue | date:'dd/MM/yyyy HH:mm' }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="client">
-            <th mat-header-cell *matHeaderCellDef>Client</th>
-            <td mat-cell *matCellDef="let v">{{ v.client_nom }}</td>
+          <ng-container matColumnDef="point_vente">
+            <th mat-header-cell *matHeaderCellDef>Point de vente</th>
+            <td mat-cell *matCellDef="let v">{{ v.point_vente_nom }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="commercial">
-            <th mat-header-cell *matHeaderCellDef>Commercial</th>
-            <td mat-cell *matCellDef="let v">{{ v.commercial_nom }}</td>
+          <ng-container matColumnDef="manager">
+            <th mat-header-cell *matHeaderCellDef>Manager</th>
+            <td mat-cell *matCellDef="let v">{{ v.manager_nom }}</td>
           </ng-container>
 
           <ng-container matColumnDef="type">
             <th mat-header-cell *matHeaderCellDef>Type</th>
             <td mat-cell *matCellDef="let v">
-              <span class="type-badge">{{ v.type_display }}</span>
+              <span class="type-badge">{{ v.type_display || v.type_visite }}</span>
             </td>
           </ng-container>
 
@@ -64,7 +70,7 @@ import { Visite } from '../../models/visite.model';
             <th mat-header-cell *matHeaderCellDef>Statut</th>
             <td mat-cell *matCellDef="let v">
               <span class="status-badge" [class]="v.statut.toLowerCase()">
-                {{ v.statut_display }}
+                {{ v.statut_display || v.statut }}
               </span>
             </td>
           </ng-container>
@@ -77,7 +83,8 @@ import { Visite } from '../../models/visite.model';
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let v">
-              <button mat-icon-button [matMenuTriggerFor]="menu" [attr.aria-label]="'Actions pour la visite ' + v.id">
+              <button mat-icon-button [matMenuTriggerFor]="menu" *ngIf="canManage"
+                [attr.aria-label]="'Actions pour la visite ' + v.id">
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #menu="matMenu">
@@ -106,6 +113,8 @@ import { Visite } from '../../models/visite.model';
     .header-actions { display: flex; gap: 12px; }
     .table-card { border-radius: 12px; }
     .loading-overlay { display: flex; justify-content: center; padding: 40px; }
+    .empty-state { text-align: center; padding: 48px; color: var(--gray-500); }
+    .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; }
     .visite-table { width: 100%; }
     .type-badge { padding: 4px 12px; background: var(--gray-100); border-radius: 20px; font-size: 12px; }
     .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
@@ -118,13 +127,18 @@ import { Visite } from '../../models/visite.model';
 })
 export class VisitesListComponent implements OnInit {
   private visiteService = inject(VisiteService);
+  private authService = inject(AuthService);
   private router = inject(Router);
 
   visites: Visite[] = [];
   isLoading = true;
-  displayedColumns = ['date', 'client', 'commercial', 'type', 'statut', 'duree', 'actions'];
+  canManage = false;
+  displayedColumns = ['date', 'point_vente', 'manager', 'type', 'statut', 'duree', 'actions'];
 
-  ngOnInit() { this.loadVisites(); }
+  ngOnInit() {
+    this.canManage = this.authService.isAdmin() || this.authService.isManager();
+    this.loadVisites();
+  }
 
   loadVisites() {
     this.isLoading = true;
@@ -138,7 +152,6 @@ export class VisitesListComponent implements OnInit {
   }
 
   checkin(visiteId: number) {
-    // Récupérer la position GPS actuelle et faire le check-in
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         this.visiteService.checkin(visiteId, {

@@ -43,17 +43,17 @@ export const routes: Routes = [
   {
     path: 'visites',
     loadComponent: () => import('./visites/visites-list/visites-list.component').then(m => m.VisitesListComponent),
-    canActivate: [authGuard],
+    canActivate: [authGuard, () => roleGuard(['ADMIN', 'MANAGER'])],
   },
   {
     path: 'visites/create',
     loadComponent: () => import('./visites/visite-form/visite-form.component').then(m => m.VisiteFormComponent),
-    canActivate: [authGuard],
+    canActivate: [authGuard, () => roleGuard(['ADMIN', 'MANAGER'])],
   },
   {
     path: 'visites/calendrier',
     loadComponent: () => import('./visites/calendrier-visites/calendrier-visites.component').then(m => m.CalendrierVisitesComponent),
-    canActivate: [authGuard],
+    canActivate: [authGuard, () => roleGuard(['ADMIN', 'MANAGER'])],
   },
 
   // GPS / Carte
@@ -114,7 +114,7 @@ export const routes: Routes = [
   {
     path: 'visite/create',
     loadComponent: () => import('./visites/visite-form/visite-form.component').then(m => m.VisiteFormComponent),
-    canActivate: [authGuard],
+    canActivate: [authGuard, () => roleGuard(['ADMIN', 'MANAGER'])],
   },
 
   // Redirections

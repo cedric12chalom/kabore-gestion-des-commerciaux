@@ -44,9 +44,9 @@ import { Commande } from '../../models/commande.model';
             <td mat-cell *matCellDef="let commande">{{ commande.reference }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="client">
-            <th mat-header-cell *matHeaderCellDef>Client</th>
-            <td mat-cell *matCellDef="let commande">{{ commande.client_nom || '-' }}</td>
+          <ng-container matColumnDef="contact">
+            <th mat-header-cell *matHeaderCellDef>Point de vente</th>
+            <td mat-cell *matCellDef="let commande">{{ commande.contact_nom || '-' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="date">
@@ -85,7 +85,7 @@ export class CommandesListComponent implements OnInit {
   private commandeService = inject(CommandeService);
 
   commandes: Commande[] = [];
-  displayedColumns = ['reference', 'client', 'date', 'montant', 'statut'];
+  displayedColumns = ['reference', 'contact', 'date', 'montant', 'statut'];
   isLoading = true;
 
   ngOnInit(): void {
