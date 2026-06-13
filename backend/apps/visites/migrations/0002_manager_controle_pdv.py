@@ -49,32 +49,19 @@ class Migration(migrations.Migration):
             old_name='contact_nom',
             new_name='point_vente_nom',
         ),
-        migrations.AddField(
-            model_name='visite',
-            name='manager',
-            field=models.ForeignKey(
-                default=get_default_manager_id,
-                limit_choices_to={'role': 'MANAGER'},
-                on_delete=django.db.models.deletion.CASCADE,
-                related_name='visites',
-                to=settings.AUTH_USER_MODEL,
-                verbose_name='manager',
-            ),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='visite',
-            name='note_controle',
-            field=models.PositiveSmallIntegerField(
-                blank=True,
-                null=True,
-                validators=[
-                    django.core.validators.MinValueValidator(1),
-                    django.core.validators.MaxValueValidator(5),
-                ],
-                verbose_name='note de contrôle',
-            ),
-        ),
+       migrations.AddField(
+    model_name='visite',
+    name='manager',
+    field=models.ForeignKey(
+        null=True,
+        blank=True,
+        limit_choices_to={'role': 'MANAGER'},
+        on_delete=django.db.models.deletion.CASCADE,
+        related_name='visites',
+        to=settings.AUTH_USER_MODEL,
+        verbose_name='manager',
+    ),
+),
         migrations.AlterField(
             model_name='visite',
             name='type_visite',

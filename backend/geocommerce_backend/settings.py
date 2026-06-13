@@ -5,6 +5,7 @@ SaaS CRM/GPS pour gestion commerciale terrain
 import os
 from pathlib import Path
 from datetime import timedelta
+import dj_database_url
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -62,6 +63,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -71,6 +73,7 @@ MIDDLEWARE = [
     'apps.core.middleware.AuditLogMiddleware',
     'apps.core.middleware.RequestTimingMiddleware',
 ]
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 ROOT_URLCONF = 'geocommerce_backend.urls'
 
@@ -102,6 +105,11 @@ if not USE_GIS:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+    DATABASES = {
+    'default': dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+    )
+}
     # NOTE: removed the PostGIS 'geocommerce' placeholder when USE_GIS is False.
     # Having a PostGIS engine declared forces Django to import GIS backends
     # (which in turn import GDAL) even in dev environments where GDAL
