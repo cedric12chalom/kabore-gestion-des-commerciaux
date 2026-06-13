@@ -142,7 +142,6 @@ GeoCommerce Pro/
 - [x] Alertes temps réel
 - [x] Messagerie interne commercial-manager
 - [x] Alertes d'inactivité
-
 ---
 
 ## 🚀 Installation
