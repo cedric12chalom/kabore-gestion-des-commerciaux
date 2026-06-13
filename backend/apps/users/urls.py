@@ -15,13 +15,9 @@ urlpatterns = [
     # Auth JWT
     path('login/', CustomTokenObtainPairView.as_view(), name='login'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-
-    # Gestion utilisateurs (prefixe /api/v1/auth/users/...)
     path('users/', UserListView.as_view(), name='user-list'),
     path('users/create/', UserCreateView.as_view(), name='user-create'),
     path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
-
-    # Profil & sécurité
     path('profile/', ProfileView.as_view(), name='profile'),
     path('change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('logout/', logout_view, name='logout'),

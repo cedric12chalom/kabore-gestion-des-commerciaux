@@ -3,7 +3,7 @@ Views pour Clients
 """
 from rest_framework import generics, filters, serializers
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Q, Count, Sum
+from django.db.models import Q, Value, DecimalField
 from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
 from apps.core.gis import Point
@@ -20,8 +20,8 @@ from apps.users.permissions import IsAdminOrManager, IsCommercial, RoleBasedPerm
 class ClientSerializer(serializers.ModelSerializer):
     """Serializer inline pour éviter import circulaire"""
     commercial_nom = serializers.CharField(source='commercial_referent.nom_complet', read_only=True)
-    nombre_visites = serializers.IntegerField(read_only=True)  # FIXED: conflict @property vs annotate
-    ca_total = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)  # FIXED: conflict @property vs annotate
+    nombre_visites = serializers.IntegerField(read_only=True, default=0)
+    ca_total = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True, default=0)
     latitude = serializers.FloatField(read_only=True)
     longitude = serializers.FloatField(read_only=True)
 
@@ -52,9 +52,9 @@ class ClientListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         qs = Client.objects.annotate(
-            nombre_visites=Count('visites'),
-            ca_total=Sum('commandes__montant_total'),
-        )
+            nombre_visites=Value(0),
+            ca_total=Value(0, output_field=DecimalField(max_digits=15, decimal_places=2)),
+        ).filter(is_actif=True)
 
         if user.is_admin:
             return qs
@@ -88,9 +88,9 @@ class ClientDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         user = self.request.user
         qs = Client.objects.annotate(
-            nombre_visites=Count('visites'),
-            ca_total=Sum('commandes__montant_total'),
-        )
+            nombre_visites=Value(0),
+            ca_total=Value(0, output_field=DecimalField(max_digits=15, decimal_places=2)),
+        ).filter(is_actif=True)
 
         if user.is_admin:
             return qs

@@ -35,7 +35,6 @@ class CommercialListView(generics.ListAPIView):
 
         if user.is_admin:
             return qs.annotate(
-                total_visites=Count('visites'),
                 ca_total=Sum('commandes__montant_total'),
             )
 
@@ -43,7 +42,6 @@ class CommercialListView(generics.ListAPIView):
             return qs.filter(
                 Q(user=user) | Q(user__manager=user)
             ).annotate(
-                total_visites=Count('visites'),
                 ca_total=Sum('commandes__montant_total'),
             )
 

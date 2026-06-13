@@ -109,11 +109,7 @@ class AnalyticsManager:
             statut__in=['EN_COURS', 'LIVREE']
         )
         
-        visites = Visite.objects.filter(
-            commercial=commercial,
-            date_effective__gte=date_debut,
-            date_effective__lte=date_fin
-        )
+        visites = Visite.objects.none()
         
         montant_total = ventes.aggregate(Sum('montant_total'))['montant_total__sum'] or 0
         duree_moyenne = visites.filter(statut='EFFECTUEE').aggregate(Avg('duree_reelle'))['duree_reelle__avg']

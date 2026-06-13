@@ -9,7 +9,7 @@ class RapportInline(admin.StackedInline):
 
 @admin.register(Visite)
 class VisiteAdmin(admin.ModelAdmin):
-    list_display = ['contact_nom', 'commercial', 'date_prevue', 'statut', 'is_validee']
+    list_display = ['point_vente_nom', 'manager', 'date_prevue', 'statut', 'is_validee']
     list_filter = ['statut', 'type_visite']
-    search_fields = ['contact_nom', 'compte_rendu']
+    search_fields = ['point_vente_nom', 'compte_rendu']
     inlines = [RapportInline]

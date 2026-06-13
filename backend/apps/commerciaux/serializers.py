@@ -97,7 +97,6 @@ class CommercialListSerializer(serializers.ModelSerializer):
     statut_display = serializers.CharField(source='get_statut_display', read_only=True)
     taux_objectif = serializers.FloatField(read_only=True)
     distance_jour = serializers.FloatField(source='distance_totale_jour', read_only=True)
-    nombre_visites_mois = serializers.SerializerMethodField()
 
     class Meta:
         model = Commercial
@@ -105,7 +104,7 @@ class CommercialListSerializer(serializers.ModelSerializer):
             'id', 'matricule', 'nom_complet', 'email', 'telephones',
             'statut', 'statut_display', 'manager', 'manager_nom', 'zone_active_nom',
             'taux_objectif', 'date_embauche', 'vehicule', 'immatriculation',
-            'distance_jour', 'nombre_visites_mois',
+            'distance_jour',
             'created_at', 'updated_at',
         ]
 
@@ -115,17 +114,6 @@ class CommercialListSerializer(serializers.ModelSerializer):
     def get_zone_active_nom(self, obj):
         za = obj.zone_active
         return za.nom if za else None
-
-    def get_nombre_visites_mois(self, obj):
-        from django.utils import timezone
-        from apps.visites.models import Visite
-        now = timezone.now()
-        return Visite.objects.filter(
-            commercial=obj,
-            date_prevue__month=now.month,
-            date_prevue__year=now.year,
-            statut='EFFECTUEE'
-        ).count()
 
 
 class CommercialDetailSerializer(serializers.ModelSerializer):

@@ -168,6 +168,14 @@ class OpportuniteSerializer(serializers.ModelSerializer):
             'date_cloture_prevue', 'notes', 'created_at', 'updated_at',
         ]
 
+    def validate(self, attrs):
+        contact_nom = attrs.get('contact_nom') or getattr(self.instance, 'contact_nom', '')
+        if not contact_nom.strip():
+            raise serializers.ValidationError({
+                'contact_nom': 'Le nom du point de vente / contact est requis.'
+            })
+        return attrs
+
 
 class OpportuniteListCreateView(generics.ListCreateAPIView):
     serializer_class = OpportuniteSerializer
