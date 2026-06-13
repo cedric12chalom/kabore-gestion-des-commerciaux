@@ -49,3 +49,6 @@
     "typescript": "~5.4.0"
   }
 }
+"scripts": {
+  "build": "ng build --configuration production"
+}
