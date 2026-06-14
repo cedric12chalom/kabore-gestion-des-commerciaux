@@ -100,7 +100,6 @@ class MessageSerializer(serializers.ModelSerializer):
             'is_lu', 'date_lecture', 'date_envoi',
         ]
 
-
 class MessageListCreateView(generics.ListCreateAPIView):
     """GET/POST /api/v1/notifications/messages/"""
     serializer_class = MessageSerializer
