@@ -24,7 +24,7 @@ DEBUG = env_bool('DEBUG', True)
 USE_GIS = env_bool('USE_GIS', False)
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-
+ALLOWED_HOSTS = ["*"]
 # Application definition
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -224,7 +224,10 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
+    "https://kabore-gestion-des-commerciaux-9amw-p6362z0pj.vercel.app",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 # En production, ajouter l'URL Vercel
 if not DEBUG:
