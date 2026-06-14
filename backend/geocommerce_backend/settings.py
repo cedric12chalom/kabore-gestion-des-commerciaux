@@ -225,6 +225,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
     "https://kabore-gestion-des-commerciaux-9amw-p6362z0pj.vercel.app",
+    "https://kabore-gestion-des-commerciaux-gdi7.vercel.app",  # ← nouveau
 ]
 
 CORS_ALLOW_CREDENTIALS = True
