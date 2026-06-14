@@ -88,7 +88,6 @@ def notifications_non_lues_view(request):
 # ========== MESSAGERIE ==========
 
 class MessageSerializer(serializers.ModelSerializer):
-    """Serializer inline"""
     expediteur_nom = serializers.CharField(source='expediteur.get_full_name', read_only=True)
     destinataire_nom = serializers.CharField(source='destinataire.get_full_name', read_only=True)
 
@@ -97,7 +96,7 @@ class MessageSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'expediteur', 'expediteur_nom',
             'destinataire', 'destinataire_nom',
-            'contenu', 'client', 'visite',
+            'contenu', 'contact_nom', 'visite',  # ← 'client' remplacé par 'contact_nom'
             'is_lu', 'date_lecture', 'date_envoi',
         ]
 
@@ -132,5 +131,3 @@ class ConversationView(generics.ListAPIView):
         ).select_related('expediteur', 'destinataire').order_by('date_envoi')
 
 
-# Import serializers
-from rest_framework import serializers
